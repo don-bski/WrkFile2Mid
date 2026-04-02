@@ -3,7 +3,8 @@ Syxmidi is a small CLI based program that transmits and received system exclusiv
 (sysex) data between a computer and MIDI device. The primary feature of syxmidi is 
 the ability to insert a user specified time delay in the sysex byte transmissions. 
 This effectively throttles the data rate for computer to MIDI device sysex transfers.
-Throttle rates are typically in the range of 0 to 500 microseconds per byte.
+Throttle rates are typically in the range of 0 to 500 microseconds per byte. Use
+`syxmidi -h` to display the program usage text.
 
 Older MIDI devices may require a slower transmission rate due to their inability
 to keep pace with modern computer data rates. Though MIDI devices all comply with the
