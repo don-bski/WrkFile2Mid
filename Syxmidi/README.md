@@ -35,5 +35,5 @@ archive zipped executable was built on Linux Mint 22.3 Zena.
 
 Use `syxmidi -h` to display the program usage text.
 
-**syxmidi_v0.2.zip** - Linux Mint compiled executable.</br>
-`md5: <tbd>`<br/>
+**syxmidi_v0.2.zip** - Linux mint compiled executable.</br>
+`md5: b6ccea14c0068d36d0a7ce87b30e0a50`<br/>
