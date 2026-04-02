@@ -19,18 +19,19 @@ microsecond delay value is needed for successful transmission of the 'User Prese
 
 Syxmidi uses the ALSA Library API for MIDI device communication; specifically
 the RawMidi interface. This interface bypasses API functions for MIDI event 
-processing and data buffering permitting syxmidi to control the transmission 
+processing and data buffering. This allows syxmidi to control the transmission 
 byte rate. 
 
 The sysex data to be sent can be specified as a file or on the CLI similar to
-the amidi program that is part of the Linux ALSA library. A syxmidi receive 
+the amidi program that is part of the ALSA library. A syxmidi receive 
 function is provided to facilitate MIDI device sysex dump requests. That is; 
 a small sysex message to the MIDI device requesting specific data followed by 
 the MIDI device's data response back to syxmidi. CLI options for showing and
 selecting from the available ALSA MIDI devices are also provided.
 
-This is a C language program. Refer to the syxmidi.c program header for the 
-build command. The archive zipped executable was built on Linux Mint 22.3 Zena.
+This is a C language program with source code incorporated from amidi.c and 
+pmidi.c. Refer to the syxmidi.c program header for the build command. The 
+archive zipped executable was built on Linux Mint 22.3 Zena.
 
-**syxmidi_v0.2.zip** - Linux Mint compiled executable.
-`SHA256: D8A3F55E6A80102FAA77EFEE011DE44911872F2F770C60EEC171EBDAB18AA54B`<br/>
+**syxmidi_v0.2.zip** - Linux Mint compiled executable.</br>
+`md5: <tbd>`<br/>
