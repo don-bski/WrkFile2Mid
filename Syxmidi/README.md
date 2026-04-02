@@ -23,9 +23,9 @@ processing and data buffering. This allows syxmidi to control the transmission
 byte rate. 
 
 The sysex data to be sent can be specified as a file or on the CLI similar to
-the amidi program that is part of the ALSA library. A syxmidi receive 
-function is provided to facilitate MIDI device sysex dump requests. That is; 
-a small sysex message to the MIDI device requesting specific data followed by 
+the amidi program that is part of the ALSA library. A syxmidi receive function
+is also provided to facilitate MIDI device sysex dump requests. That is; a
+small sysex message to the MIDI device requesting specific data followed by 
 the MIDI device's data response back to syxmidi. CLI options for showing and
 selecting from the available ALSA MIDI devices are also provided.
 
