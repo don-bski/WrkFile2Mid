@@ -29,7 +29,7 @@ small sysex message to the MIDI device requesting specific data followed by
 the MIDI device's data response back to syxmidi. CLI options for showing and
 selecting from the available ALSA MIDI devices are also provided.
 
-This is a C language program with source code incorporated from amidi.c and 
+This is a C language program with some source code leveraged from amidi.c and 
 pmidi.c. Refer to the syxmidi.c program header for the build command. The 
 archive zipped executable was built on Linux Mint 22.3 Zena.
 
