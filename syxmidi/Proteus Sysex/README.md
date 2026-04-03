@@ -1,1 +1,1 @@
-Preset banks for Proteus 1, 2, and 3.
+Preset banks for Emu Proteus 1, 2, and 3. See the text file in each zip for a content desctiption. Read before use! The ID of your Proteus unit must be set to 00 to successfully load into the 'User Presets' locations 64-127.
