@@ -80,10 +80,10 @@ option. The available sysex banks are then displayed for user selection and tran
           
 - When this option value is numeric, the value represents the MIDI device port to use; 
 e.g. 0, 1. The .sxd port value in each bank is ignored. All .sxd sysex banks 
-marked **auto:yes** are transmitted.
+marked `auto:yes` are transmitted.
           
 - When this option value is **auto**, the .sxd specified port value in each sysex bank 
-is used. All .sxd sysex banks marked **auto:yes** are transmitted. The **-M** option will 
+is used. All .sxd sysex banks marked `auto:yes` are transmitted. The **-M** option will 
 likely be needed if more than one MIDI device is available.
           
 ### -M option
