@@ -56,7 +56,7 @@ Example sxd file created by the -f option.
 ```
 auto:yes
 port:1
-name:Flute/Horn
+name:Flute/Horn     P/2   #84
 sysx:F018040001540046006C0075007400650068006F ... 001EF7
 auto:no
 port:1
