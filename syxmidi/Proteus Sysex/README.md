@@ -1,4 +1,5 @@
-Preset banks for Emu Proteus 1, 2, and 3. See the text file in each zip for a content desctiption. The ID of your Proteus unit must be set to 00 to successfully load into the 'User Presets' locations 64-127. If you're currently using the factory defaults in these locations, you don't need to save them since the factory defaults are included here. Otherwise, save your user presets before loading any of these banks. **These banks WILL OVERWRITE the current user presets in locations 64 through 127!**
+## Proteus Preset Banks
+This archive has preset banks for Emu Proteus 1, 2, and 3. See the text file in each zip for a content desctiption. The ID of your Proteus unit must be set to 00 to successfully load into the 'User Presets' locations 64 - 127. If you're currently using the factory defaults in these locations, you don't need to save them since the factory defaults are included here. Otherwise, save your user presets before loading any of these banks. **These banks WILL OVERWRITE the current user presets in locations 64 through 127!**
 
 Use syxmidi and the following procedure to save the user presets using the Proteus front panel.
 1. Ensure Proteus and computer are properly MIDI cable connected.
@@ -11,8 +12,20 @@ Use syxmidi and the following procedure to save the user presets using the Prote
 8. On Proteus press the `Enter` button to send user presets 64-127 to syxmidi. Data is saved to the specified file.
 9. On Proteus press the `Master` button.
 
-**Problem:** Your Proteus unit produces unexpected distortions after loading syxex data. Powering off/on the unit does not correct the problem. Attempts to reload factory presets does not correct the problem.
+## Sysex Related Troubleshooting
+**Problem 1:** You download and unzip the SYX files but are unable to load the presets into your Proteus unit. The computer software doesn't recognize a SYX file.</br>
+**Answer:** Try a different Sysex dump utility program. Windows: `Bome SendSX` or `MIDI-OX`. Linux: `syxmidi` from this archive.
 
+**Problem 2:** Unable to transfer a ppreset bank to Proteus. The MIDI indicator illuminates during the actual transfer. When the transfer completes, the Proteus still contains the previous presets in locations 64 - 127.</br>
+**Answer:** Check the Unit ID setting on the Proteus unit. The unit ID is located by pressing the Proteus front panel Master button and scrolling with the Data knob. All preset banks in this archive were created using ID setting 00. Proteus must be set to ID 00 to load the preset banks. If you normally use a different unit ID in your setup, resave the patch bank using your ID setting. 
+
+**Problem 3:** You are able to transfer individual presetss (265 bytes) from your computer to Proteus. When transfering a full preset bank (17k bytes), some or all of the presets don't work or sound incomplete.</br>
+**Answer:** The computer based sequencer program may be sending the the Sysex data too fast for the Proteus. This generally results in parts of the Sysex data being lost. Check the sequencer software configuration settings for the ability to "slow down" the transmission of Sysex data. Cakewalk, for example, allows for the insertion of a delay both between sysex bytes and/or after a specified number of bytes have been sent. Check in your sequencer program documentation. 
+
+**Problem 4:** You can transfer full preset banks (17k bytes) from computer to Proteus okay. Some of the presets don't sound like their name would imply or multiple presets sound the same.</br>
+**Answer:** Make sure that the preset bank is the correct for your Proteus unit. A Proteus/2 preset bank will appear to load correctly but will not function properly on a Proteus/1. The Primary and Secondary waves specified in a preset must be available on your Proteus unit.
+
+**Problem 5:** Your Proteus unit produces unexpected distortions after loading syxex data. Powering off/on the unit does not correct the problem. Attempts to reload factory presets does not correct the problem.</br>
 **Answer:** Sysex data may have become corrupted during transmission to your Proteus unit. This is rare. The corrupted sysex data "scrambles" the Proteus NVRAM such that the internal processor can not properly function. A Diagnostic Mode Initialize may be needed to correct this condition.
 
 **Proteus Initialization Procedure:**</br>
@@ -27,3 +40,9 @@ Use syxmidi and the following procedure to save the user presets using the Prote
 8. Press `Master` and re-enter the desired settings.
 9. Reload the factory default presets to locations 64-127.
     
+**Problem 6:** Proteus still not working. What else can I check?</br>
+**Answer:** All of the preset banks use SYX for the file type. If the sysex program requires a different file type, you can safely rename the file type as appropriate. The preset bank contents are in Proteus binary format and the file name/type is not used.
+
+If the preset bank loads into the program, then the problem is related to the MIDI side. When you send the the preset bank, does the MIDI activity indicator on Proteus light? If not, then the sysex program isn't using your MIDI interface properly. I would check the program configuration settings for the MIDI port address and other parameters. Also check the MIDI cable connections. MIDI out from computer to midi in on Proteus.
+
+If the Proteus MIDI activity indicator does light, then the preset bank data is being sent out onto the MIDI cable and the problem is on the Proteus end. Double check the Proteus unit ID is set to 00. Isolate the computer MIDI interface and Proteus on the MIDI cable in question. 
