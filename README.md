@@ -1,8 +1,8 @@
 # WrkFile2Mid.pl
 This CLI perl program parses and extracts data from Cakewalk WRK files. This file
-type was used with early 90's versions of the Twelve Tone Cakewalk MIDI Sequencer 
-program. Cakewalk MIDI sequencer WRK files hold sequencer related musical
-data (note, tempo, lyric, etc.), Cakewalk GUI settings, studio music 
+type was used with early 90's versions of the Cakewalk MIDI Sequencer program 
+marketed by Twelve Tone. Cakewalk MIDI sequencer WRK files hold sequencer related 
+musical data (note, tempo, lyric, etc.), Cakewalk GUI settings, studio music 
 device configurations, and MIDI device system exclusive (sysex) data. 
    
 A Cakewalk feature of the sysex bank allows for marked sysex entries to be 
