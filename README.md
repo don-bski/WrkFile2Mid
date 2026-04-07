@@ -87,26 +87,33 @@ is used. All .sxd sysex banks marked `auto:yes` are transmitted. The **-M** opti
 likely be needed if more than one MIDI device is available.
           
 ### -M option
-This option specifies one or more mapping pairs; `<n>=<srch>`. `<n>` is numeric and 
-corresponds to the .sxd file Port column value. `<srch>` is a text string that uniquely 
-identifies a MIDI device name. Used primarily with **-p auto**. e.g. `-M 0='In 2',1='In 1'`. 
-This option also provides a means to reorder the MIDI device(s) or force each port to 
-the same MIDI device. During .sxd processing, each sysex bank is sent to its port 
-mapped MIDI device. 
+This option specifies one or more rawmidi port mappings. The first entry alters port 0, 
+the second port 1, etc. Rawmidi ports are used by the -s option and correspond to the 
+.sxd file Port column value. The value entered for each port must wholly or partially 
+match the Device or Name shown by the -m (lowercase) option. Examples:
+```
+   Port  Device       Name
+    0    hw:2,0,0     MIDIPLUS TBOX 2x2 Midi In 1
+    1    hw:2,0,1     MIDIPLUS TBOX 2x2 Midi In 2
+
+      -M 'hw:2,0,1'  - Port 0 set to specified device.
+      -M '0,1'       - Port 0 set to matching device hw:2,0,1.
+
+   Semicolon separates multiple port mappings.
           
-Mappings are joined by the equal **=** character and comma separated if more than 1. 
-Enclose `<srch>` in quotes if it contains a space. The `<srch>` string is case sensitive. 
-Use the lowercase **-m** option to show the available MIDI devices.
-          
+      -M 'In 2;In 1' - Port 0 set to device with name containing In 2.
+                     - Port 1 set to device with name containing In 1.
+      -M '0,1;In 1'  - Port 0 set to matching device hw:2,0,1.
+                     - Port 1 set to device with name containing In 1.
+```          
 ### -z option
 Specifies a microsecond time delay value; typically 0-500. It is used between bytes 
 of the sysex data transmission associated with the **-s** option. This throttle helps 
-to mitigate data overload with older MIDI devices.     
+to mitigate data overload with older MIDI devices. Default 250 if not specified.    
        
 ### -t option
 Specifies the WRK file track(s) to process; multiple tracks must be comma separated. 
-The first track number is 0. For example: `-t 0,1,2` includes only tracks 0, 1, and 2 
-in the standard MIDI file.
+For example: -t 1,2,5 includes only tracks 1, 2, and 5 in the standard MIDI file.
           
 ### -n option
 Disables use of WRK file specified track/measure adjustment values. When not disabled, 
@@ -138,15 +145,15 @@ Displays a hex dump of the specified file. No other processing is performed.
                  Colored text is used for each level. Specify 'm' (e.g. 2m),
                  for monochrome text. Useful for redirected console output.
 
-   -t <trk>      Process only the specified track(s). 0 is the first track.
-   -a            Include sysex bank data in track 0 of MIDI file. 
+   -t <trk>      Process only the specified track(s).
+   -a            Include sysex bank data in track 1 of MIDI file. 
    -f            Format sysex data to a -s useable .sxd file.
    -e            Export raw sysex data to a .syx file.
    
    -s <file>     Sysex data for transmission to a MIDI device.
    -p <p>|auto   MIDI device port. -s option interactive if not specified.
    -M <map>      Specifies a MIDI device port mapping string. 
-   -z <us>       Sysex throttle. Default 0.
+   -z <usec>     Sysex throttle. Default 250 usec/byte.
     
    -c <file>     Check the specified file for valid MIDI format.
    -m            Show available MIDI devices.
@@ -170,13 +177,13 @@ Displays a hex dump of the specified file. No other processing is performed.
    WrkFile2Mid.pl -a ./cakewalk/sequences/*.wrk
       Process all WRK files found in the cakewalk/sequences folder below the 
       current working directory. All corresponding .mid files are created in
-      the specified directory and include auto-send sysex data in track 0.
+      the specified directory and include auto-send sysex data in track 1.
 
    WrkFile2Mid.pl -f mySequence.wrk
       Process the specified WRK file and create mySequence.sxd in the
       current working directory.
 
-   WrkFile2Mid.pl -p auto -M 0=24:0,1=24:1 -s mySequence.sxd
+   WrkFile2Mid.pl -p auto -M 'In 2;In 1' -s mySequence.sxd
       Transmit the auto:yes marked sysex banks in the mySequence.sxd file
       to a MIDI device(s). Use the .sxd specified port in each bank as mapped
       to a corresponding physical MIDI device port.
