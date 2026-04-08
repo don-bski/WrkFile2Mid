@@ -4,7 +4,7 @@ type was used with early 90's versions of the Cakewalk MIDI Sequencer program
 marketed by Twelve Tone. Cakewalk MIDI sequencer WRK files hold sequencer related 
 musical data (note, tempo, lyric, etc.), Cakewalk GUI settings, studio music 
 device configurations, and MIDI device system exclusive (sysex) data. 
-   
+ 
 A Cakewalk feature of the sysex bank allows for marked sysex entries to be 
 auto-sent to the MIDI devices during sequence load. This feature was used 
 to initialize my pre-General Midi EMU Proteus units with the customized 
@@ -24,6 +24,10 @@ This program has been tested with Cakewalk WRK file versions 2.0, 3.0,
 and 'new 4.0'. New 4.0 identifies as 3.0 but has additional record types.
 The MIDI format 1 output file has been used with Audacity, Rosegarden, 
 and CLI pmidi (linuxmint) players. 
+
+The syxmidi tool is integrated with this version of WrkFile2Mid. The path 
+to the syxmidi executable is the directory holding WrkFile2Mid.pl. Place 
+a copy of syxmidi in this directory.
    
 In general, this CLI based program provides the following functions.
    
