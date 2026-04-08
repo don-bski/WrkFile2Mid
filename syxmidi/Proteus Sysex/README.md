@@ -45,4 +45,18 @@ Use syxmidi and the following procedure to save the user presets using the Prote
 
 If the preset bank loads into the program, then the problem is related to the MIDI side. When you send the the preset bank, does the MIDI activity indicator on Proteus light? If not, then the sysex program isn't using your MIDI interface properly. I would check the program configuration settings for the MIDI port address and other parameters. Also check the MIDI cable connections. MIDI out from computer to midi in on Proteus.
 
-If the Proteus MIDI activity indicator does light, then the preset bank data is being sent out onto the MIDI cable and the problem is on the Proteus end. Double check the Proteus unit ID is set to 00. Isolate the computer MIDI interface and Proteus on the MIDI cable in question. 
+**Problem 7:** Will Proteus/1 and Proteus/2 presets work on other Emu Proteus sound modules?</br>
+**Answer:** You can load Proteus/1 and Proteus/2 presets into other Emu Proteus sound modules. Whether they will sound as intended depends on the fundamental sound entries contained in your Proteus wave table ROMs.
+
+Each preset in the Proteus unit can be composed of up to 2 fundamental sounds; the primary and secondary. These settings for a particular preset can be viewed by pressing the `Edit` button on Proteus and turning the `Data` knob to display the `INSTRUMENT pri` and `INSTRUMENT sec` settings. The Proteus manual lists all of the fundamental sounds contained in the units sound ROMs. Lacking a manual, you can view the fundamental sound names using the Proteus front panel and the following procedure.
+1. Press the `Edit` button on the front panel. 
+2. Rotate the `Data` knob to display `INSTRUMENT pri`. 
+3. Press the `Cursor` button to move cursor to the lower display line. 
+4. Rotate the `Data` knob to display the sound wave number/names in the unit. 
+5. Press the `Edit` button to exit edit mode. 
+
+If the Proteus unit contains both of the fundamental sounds required by a particular preset, then the preset will sound correctly when loaded on the unit. If only one fundamental sound is present, then only the contribution that the fundamental makes to the overall preset will be heard. If neither fundamental sound is present, you will hear the sound of silence.
+
+The Proteus units have a number of fundamental sounds in common with each other; especially the wave forms and overtone series. The newer units have some of the better fundamentals from the older units.
+
+Experimenting could yield some unexpected and unique sounds. Who knows what you might get if you cross a woodwind preset with a bagpipe!  
