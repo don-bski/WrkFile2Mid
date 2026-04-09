@@ -21,6 +21,10 @@
  *   The following command was used to build the program:
  *     gcc syxmidi.c -o syxmidi -lasound
  * 
+ *   If asound dependency related messages are reported, use the linux 
+ *   package manager, e.g. 'sudo apt install', to install one of amidi, 
+ *   aconnect, or pmidi to resolve.
+ * 
  *   Change history
  *   v0.2   04-02-2026    Added -L option.
  *   v0.1   03-30-2026    Initial code release.
