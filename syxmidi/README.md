@@ -7,10 +7,10 @@ Throttle rates are typically in the range of 0 to 500 microseconds per byte.
 
 Older MIDI devices may require a slower transmission rate due to their inability
 to keep pace with modern computer data rates. Though MIDI devices all comply with the
-MIDI standardized 31.25 Kbps rate, older devices may not process the received data 
-fast enough to keep pace with longer sysex messages. This overload results in 
+MIDI standardized 31.25 Kbps baud rate, older devices may not process the received 
+data fast enough to keep pace with longer sysex messages. This overload results in 
 dropped sysex data and MIDI messaging errors. The user specified delay value
-slows the byte rate, not the MIDI 31.25 Kbps bitrate, resulting in more time for
+slows the byte rate, not the MIDI 31.25 Kbps baud rate, resulting in more time for
 the MIDI device to process previously received data bytes.
 
 For reference, using Emu Proteus 1 and 2 devices and a USB MIDI connection, a 200 
