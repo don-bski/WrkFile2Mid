@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # ==============================================================================
-# FILE: WrkFile2Mid.pl                                                4-08-2026
+# FILE: WrkFile2Mid.pl                                                4-09-2026
 #
 # SERVICES: Parse Cakewalk WRK file.  
 #
@@ -49,6 +49,14 @@
 #   rosegarden sequencer on the same computer. Likely pmidi is not configuring
 #   an event timer properly.
 #
+#   Syxmidi is a small C language tool that is integrated with this version of 
+#   WrkFile2Mid. It provides the needed interfacing functions to the ALSA rawmidi
+#   API. These functions are only used with the WrkFile2Mid -m, -M, and -s options. 
+#   Syxmidi is a Linux only program at this time. See the syxmidi documentation
+#   for build details. The syxmidi executable should be located in the WrkFile2Mid
+#   directory. Long term plan is to replace syxmidi integration with the MIDI::
+#   RtMidi::FFI::Device module once it implements the needed rawmidi functions.
+#
 #   There is a lot of debug messaging code (-d) that was used to learn the ins
 #   and outs of WRK and MIDI files during program developemt. It was left in for 
 #   future needs since it has insignificant performance impact on this program. 
@@ -69,10 +77,10 @@
 #   specification.
 #
 #   The WrkFile2Mid.pm file holds support code for this program. See note below
-#   for possible future Windows OS PAR::Packer integration if the MIDI::RtMidi::
-#   FFI::Device module becomes available to replace syxmidi.
+#   on how it is added at perl runtime. Windows Strawberry perl can't locate the
+#   module unless 'eval' method is used.
 # ==============================================================================
-use strict;
+#use strict;
 use warnings;
 use Getopt::Std;
 use Cwd;
@@ -93,15 +101,17 @@ else {
 }
 unshift (@INC, $WorkingDir);
 
-# --- Use eval to add the perl module for the PAR::Packer created windows executable.
-#     Eval method is also needed in the Windows environment. This interferes with
-#     syntax error reporting in linux. Use 'use' for linux based environments.
-# eval "use WrkFile2Mid";
-use WrkFile2Mid;
+#  Use eval to add the WrkFile2Mid.pm module in the Windows environment. It's
+#  done here after $WorkingDir is added to @INC so the module is found by perl.
+#  This interferes with syntax error reporting in linux so normal 'use' for 
+#  non-Windows environments.
+eval "use WrkFile2Mid" if ($^O =~ m/Win/i);
+use if $^O !~ m/Win/i, WrkFile2Mid;
 
 our %cliOpts = ();                                # CLI options working hash
 getopts('hauvefmnM:p:s:d:c:t:x:z:', \%cliOpts);   # Load CLI options hash
 our $Syxmidi = join('/', $WorkingDir, 'syxmidi'); # syxmidi tool.
+our $Version = 'v0.1';                            # Program version string.
 
 # The following hashs holds WRK file global data. Various chunck processors store
 # data here. The primary used entries are 'version' and 'timebase'.
@@ -270,7 +280,11 @@ GENERAL DESCRIPTION
    included MIDI note transposition, note velocity, and time offset. These
    adjustments are applied during MIDI output file creation unless the -n 
    option (no adjust) is specified.
-   
+
+   NOTE: This version of WrkFile2Mid uses the syxmidi tool for the -m, -M,
+   and -s options. If these options are used, the syxmidi executable must
+   be present in the WrkFile2Mid directory. See the syxmidi documentation.
+
    This program has been tested with Cakewalk WRK file versions 2.0, 3.0,
    and 'new 4.0'. New 4.0 identifies as 3.0 but has additional record types.
    The MIDI format 1 output file has been used with Audacity, Rosegarden, 
@@ -417,6 +431,8 @@ EXAMPLES:
       a MIDI device(s). Use the .sxd specified port in each bank as mapped
       to a corresponding rawmidi device port.
 
+VERSION: 
+   $ExecutableName $Version
 ===============================================================================
 ));
 
