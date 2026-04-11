@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # ==============================================================================
-# FILE: WrkFile2Mid.pl                                                4-09-2026
+# FILE: WrkFile2Mid.pl                                                4-10-2026
 #
 # SERVICES: Parse Cakewalk WRK file.  
 #
@@ -75,41 +75,29 @@
 #
 #   See https://midi.org/midi-1-0-detailed-specification for the MIDI file 
 #   specification.
-#
-#   The WrkFile2Mid.pm file holds support code for this program. See note below
-#   on how it is added at perl runtime. Windows Strawberry perl can't locate the
-#   module unless 'eval' method is used.
 # ==============================================================================
-#use strict;
+use strict;
 use warnings;
-use Getopt::Std;
-use Cwd;
+use Cwd qw( abs_path getcwd);
 use File::Basename;
+use lib dirname( abs_path( $0 ) );   # Add cwd for WrkFile2Mid.pm locate.
+use Getopt::Std;
+use WrkFile2Mid;
 # use MIDI::RtMidi::FFI::Device;
 
 # ==============================================================================
 # Global Variables
-our ($ExecutableName) = ($0 =~ /([^\/\\]*)$/);
+our %cliOpts = ();                                # CLI options working hash
+getopts('hauvefmnM:p:s:d:c:t:x:z:', \%cliOpts);   # Load CLI options hash
 
-# --- Add start directory to @INC for executable included perl module.
-our $WorkingDir;
+our ($ExecutableName) = ($0 =~ /([^\/\\]*)$/);    # Program name.
+our $WorkingDir;                                  # Working directory.
 if ($0 =~ m#^(.+)$ExecutableName$#) {
    $WorkingDir = $1;
 }
 else {
-   $WorkingDir = cwd();
+   $WorkingDir = getcwd;
 }
-unshift (@INC, $WorkingDir);
-
-#  Use eval to add the WrkFile2Mid.pm module in the Windows environment. It's
-#  done here after $WorkingDir is added to @INC so the module is found by perl.
-#  This interferes with syntax error reporting in linux so normal 'use' for 
-#  non-Windows environments.
-eval "use WrkFile2Mid" if ($^O =~ m/Win/i);
-use if $^O !~ m/Win/i, WrkFile2Mid;
-
-our %cliOpts = ();                                # CLI options working hash
-getopts('hauvefmnM:p:s:d:c:t:x:z:', \%cliOpts);   # Load CLI options hash
 our $Syxmidi = join('/', $WorkingDir, 'syxmidi'); # syxmidi tool.
 our $Version = 'v0.1';                            # Program version string.
 
@@ -992,13 +980,15 @@ sub MidiFileHeader {
    my @nameRec = @trk[$#trk-($nameLen-1) .. $#trk];   
    &DisplayDebug(1,"MidiFileHeader: name rec: @nameRec   " . pack("(H2)*", @nameRec));
    
-   # Time signature.
-   my @meterKeyList = sort {$a <=> $b} keys(%$MeterData);
-   if (scalar @meterKeyList > 0 ) {
-      $measure = $meterKeyList[0];              # Get 1st entry index.
-      my @data = split(':', $$MeterData{ $measure });    
-      $num = $data[0];   $dem = $data[1];
-      $keySig = $data[2] if (defined($data[2]));
+   # Time signature. Use defaults if no meter entries.
+   if (scalar keys(%$MeterData) > 0) {
+      my @meterKeyList = sort {$a <=> $b} keys(%$MeterData);
+      if (scalar @meterKeyList > 0 ) {
+         $measure = $meterKeyList[0];              # Get 1st entry index.
+         my @data = split(':', $$MeterData{ $measure });    
+         $num = $data[0];   $dem = $data[1];
+         $keySig = $data[2] if (defined($data[2]));
+      }
    }
    push (@trk, '01','FF','58','04', sprintf("%02X", $num), $pwr2{$dem}, '18','08');
    my @meterRec = @trk[$#trk-7 .. $#trk];   
@@ -1435,11 +1425,9 @@ if (defined( $cliOpts{c} ) ) {
 
 # ==========
 # Verify syxtool is available if user specified an option that needs it.
-if (defined( $cliOpts{m} ) or defined( $cliOpts{M} ) or defined( $cliOpts{s} )) {
-   unless (-e $Syxmidi) {
-      &ColorMessage("Required tool syxmidi not found: $Syxmidi", "BRIGHT_RED", '');
-      exit(1);
-   }
+unless (-e $Syxmidi) {
+   &ColorMessage("Required tool syxmidi not found: $Syxmidi", "BRIGHT_RED", '');
+   exit(1);
 }
 
 # ==========

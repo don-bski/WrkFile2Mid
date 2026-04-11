@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # ==============================================================================
-# FILE: WrkFile2Mid.pm                                                4-09-2026
+# FILE: WrkFile2Mid.pm                                                4-10-2026
 #
 # SERVICES: Support code for WrkFile2Mid.pl.  
 #
@@ -369,7 +369,7 @@ sub MemRegionChunk {
    my($WrkData, $Id) = @_;
    my $wrkMemRgn = $$WrkData{$Id}{'result'};
    my @wrkBytes = @{ $$WrkData{'00'}{'chunkbytes'} };
-   &DisplayDebug(2,"MemRegionChunk data: @wrkBytes");
+   &DisplayDebug(2,"MemRegionChunk Id: $Id   data: @wrkBytes");
 
    my $key = splice(@wrkBytes, 0, 1);
    @{ $$wrkMemRgn{$key} } = @wrkBytes;
@@ -412,7 +412,7 @@ sub MarkersChunk {
    my($WrkData, $Id) = @_;
    my $wrkMarkers = $$WrkData{$Id}{'result'};
    my @wrkBytes = @{ $$WrkData{'00'}{'chunkbytes'} };
-   &DisplayDebug(2,"MarkersChunk data: @wrkBytes");
+   &DisplayDebug(2,"MarkersChunk Id: $Id   data: @wrkBytes");
 
    my @data = splice(@wrkBytes, 0, 4);
    my $count = hex($data[3])*16777216 + hex($data[2])*65536 +
@@ -502,7 +502,7 @@ sub VarsChunk {
       return 0;
    }
    
-   &DisplayDebug(2,"VarsChunk data: @wrkBytes");
+   &DisplayDebug(2,"VarsChunk Id: $Id   data: @wrkBytes");
    my $cakeVars = $$WrkData{$Id}{'result'};
    my @data = splice(@wrkBytes, 0, 4);
    $$cakeVars{'now'} = hex($data[3])*16777216 + hex($data[2])*65536 +
@@ -588,7 +588,7 @@ sub StringTableChunk {
    my $wrkStrTbl = $$WrkData{$Id}{'result'};
    my @wrkBytes = @{ $$WrkData{'00'}{'chunkbytes'} };
 
-   &DisplayDebug(2,"StringTableChunk  data: @wrkBytes");
+   &DisplayDebug(2,"StringTableChunk Id: $Id   data: @wrkBytes");
    my @data = splice(@wrkBytes, 0, 2);
    my $count = hex($data[1])*256 + hex($data[0]);
    for (my $x = 0; $x < $count; $x++) {
@@ -680,7 +680,7 @@ sub ThruChunk {
    my($WrkData, $Id) = @_;
    my $wrkGlobal = $$WrkData{$Id}{'result'};
    my @wrkBytes = @{ $$WrkData{'00'}{'chunkbytes'} };
-   &DisplayDebug(2,"ThruChunk data: @wrkBytes");
+   &DisplayDebug(2,"ThruChunk Id: $Id   data: @wrkBytes");
 
    my @data = splice(@wrkBytes, 0, 2);
    my $port = hex( splice(@wrkBytes, 0, 1) );
@@ -731,7 +731,7 @@ sub TempoChunk {
 
    my @wrkBytes = @{ $$WrkData{'00'}{'chunkbytes'} };
    my $tempoData = $$WrkData{$Id}{'result'};
-   &DisplayDebug(2,"TempoChunk data: @wrkBytes");
+   &DisplayDebug(2,"TempoChunk Id: $Id   data: @wrkBytes");
    
    my @data = splice(@wrkBytes, 0, 2);
    my $count = hex($data[1])*256 + hex($data[0]);
@@ -803,7 +803,7 @@ sub MeterChunk {
     
    my @wrkBytes = @{ $$WrkData{'00'}{'chunkbytes'} };
    my $meterData = $$WrkData{$Id}{'result'};
-   &DisplayDebug(2,"MeterChunk data: @wrkBytes");
+   &DisplayDebug(2,"MeterChunk Id: $Id   data: @wrkBytes");
    
    my @data = splice(@wrkBytes, 0, 2);
    my $count = hex($data[1])*256 + hex($data[0]);
@@ -829,7 +829,6 @@ sub MeterChunk {
       &DisplayDebug(1,"MeterChunk: measure: $measure   numerator: $numerator   " .
                       "denominator: $denominator   key: $key");
    }
-
    return 0;
 }
 
@@ -892,7 +891,7 @@ sub SysexChunk {
    my $sysexBank = $$WrkData{$Id}{'result'};
    my @wrkBytes = @{ $$WrkData{'00'}{'chunkbytes'} };
 
-   &DisplayDebug(2,"SysexChunk data: @wrkBytes");
+   &DisplayDebug(2,"SysexChunk Id: $Id   data: @wrkBytes");
    if ($Id eq '06') {           # One byte bank number and 16 bit length?
       $bankNum = hex( splice(@wrkBytes, 0, 1) );
       my @data = splice(@wrkBytes, 0, 2);
@@ -990,7 +989,7 @@ sub TrkMiscChunks {
    my @wrkBytes = @{ $$WrkData{'00'}{'chunkbytes'} };
    my $trackData = $$WrkData{$Id}{'result'};
    
-   &DisplayDebug(2,"TrkMiscChunks data: @wrkBytes");
+   &DisplayDebug(2,"TrkMiscChunks Id: $Id   data: @wrkBytes");
    my @data = splice(@wrkBytes, 0, 2);
    my $trackNum = (hex($data[1])*256 + hex($data[0])) +1;  # Make tracks start at 1.
 
@@ -1085,7 +1084,7 @@ sub TrackChunk {
    my @wrkBytes = @{ $$WrkData{'00'}{'chunkbytes'} };
    my $trackData = $$WrkData{$Id}{'result'};
  
-   &DisplayDebug(2,"TrackChunk data: @wrkBytes");
+   &DisplayDebug(2,"TrackChunk Id: $Id   data: @wrkBytes");
    my @data = splice(@wrkBytes, 0, 2);
    my $trackNum = (hex($data[1])*256 + hex($data[0])) +1;  # Make tracks start at 1.
    my $nameLen = hex( splice(@wrkBytes, 0, 1) );    
@@ -1210,7 +1209,7 @@ sub StreamChunk {
    my @wrkBytes = @{ $$WrkData{'00'}{'chunkbytes'} };
    my $trackData = $$WrkData{$Id}{'result'};
    
-   &DisplayDebug(2,"StreamChunk data: @wrkBytes");
+   &DisplayDebug(2,"StreamChunk Id: $Id   data: @wrkBytes");
    my @data = splice(@wrkBytes, 0, 2);
    my $trackNum = (hex($data[1])*256 + hex($data[0])) +1;  # Make tracks start at 1.
 
@@ -1281,7 +1280,7 @@ sub TimeFmtChunk {
    my ($WrkData, $Id) = @_;
    my $wrkGlobal = $$WrkData{$Id}{'result'};
    my @wrkBytes = @{ $$WrkData{'00'}{'chunkbytes'} };
-   &DisplayDebug(2,"TimeFmtChunk: @wrkBytes");
+   &DisplayDebug(2,"TimeFmtChunk Id: $Id   @wrkBytes");
    
    my @data = splice(@wrkBytes, 0, 2);
    my $format = hex($data[1])*256 + hex($data[0]);
@@ -1319,7 +1318,7 @@ sub TimebaseChunk {
    my ($WrkData, $Id) = @_;
    my $wrkGlobal = $$WrkData{$Id}{'result'};
    my @wrkBytes = @{ $$WrkData{'00'}{'chunkbytes'} };
-   &DisplayDebug(2,"TimebaseChunk: @wrkBytes");
+   &DisplayDebug(2,"TimebaseChunk Id: $Id   @wrkBytes");
    
    my @data = splice(@wrkBytes, 0, 2);
    $$wrkGlobal{'timebase'} = hex($data[1])*256 + hex($data[0]);
