@@ -193,4 +193,4 @@ Displays a hex dump of the specified file. No other processing is performed.
       to a corresponding physical MIDI device port.
 ```
 
-<img src="wrkfile2mid_cap.jpg" alt="screenshot" width="1092"/><br/>
+<img src="wrkfile2mid_cap.png" alt="screenshot" width="1092"/><br/>
