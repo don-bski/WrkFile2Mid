@@ -25,9 +25,9 @@ and 'new 4.0'. New 4.0 identifies as 3.0 but has additional record types.
 The MIDI format 1 output file has been used with Audacity, Rosegarden, 
 and CLI pmidi (linuxmint) players. 
 
-The syxmidi tool is integrated with this version of WrkFile2Mid. The path 
-to the syxmidi executable is the directory holding WrkFile2Mid.pl. Place 
-a copy of syxmidi in this directory.
+The syxmidi tool, linux only at this time, is integrated with this version 
+of WrkFile2Mid. The path to the syxmidi executable is the directory holding 
+WrkFile2Mid.pl. Place a copy of syxmidi in this directory.
    
 In general, this CLI based program provides the following functions.
    
