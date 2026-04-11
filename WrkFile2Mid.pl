@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # ==============================================================================
-# FILE: WrkFile2Mid.pl                                                4-10-2026
+# FILE: WrkFile2Mid.pl                                                4-11-2026
 #
 # SERVICES: Parse Cakewalk WRK file.  
 #
@@ -44,10 +44,7 @@
 #
 #   The pmidi program, if not already present, is installed using the Linux 
 #   package manager. e.g. 'sudo apt install pmidi'. Multiple MIDI ports are 
-#   specified using its -p option. e.g. pmidi -p 24:0,24:1 file.mid. The only
-#   anomaly I've noticed is the playback tempo is slower when compared to the
-#   rosegarden sequencer on the same computer. Likely pmidi is not configuring
-#   an event timer properly.
+#   specified using its -p option. e.g. pmidi -p 24:0,24:1 file.mid.
 #
 #   Syxmidi is a small C language tool that is integrated with this version of 
 #   WrkFile2Mid. It provides the needed interfacing functions to the ALSA rawmidi
@@ -75,6 +72,9 @@
 #
 #   See https://midi.org/midi-1-0-detailed-specification for the MIDI file 
 #   specification.
+#
+#   v0.1   Initial release.
+#   v0.2   MIDI file tempo correction.
 # ==============================================================================
 use strict;
 use warnings;
@@ -99,7 +99,7 @@ else {
    $WorkingDir = getcwd;
 }
 our $Syxmidi = join('/', $WorkingDir, 'syxmidi'); # syxmidi tool.
-our $Version = 'v0.1';                            # Program version string.
+our $Version = 'v0.2';                            # Program version string.
 
 # The following hashs holds WRK file global data. Various chunck processors store
 # data here. The primary used entries are 'version' and 'timebase'.
@@ -1013,8 +1013,11 @@ sub MidiFileHeader {
    $$TempoData{0} = $bpm * 100 if (scalar keys(%$TempoData) == 0);
    my @tempos = sort {$a <=> $b} keys(%$TempoData);
    &DisplayDebug(1,"MidiFileHeader: tempos: @tempos");
+   my $lastTempoTime = 0;
+   my $tempoTime;
    foreach my $time (@tempos) {
-      my @tempoRec = &EncodeDeltaTime($time);
+      $tempoTime = $time - $lastTempoTime;     # Offset from previous tempo time
+      my @tempoRec = &EncodeDeltaTime($tempoTime);
       push (@tempoRec, 'FF','51','03');
       my $tempo = $$TempoData{$time}/100;
       my $uSecQnote = 60000000 / $tempo;
@@ -1023,6 +1026,7 @@ sub MidiFileHeader {
                        sprintf("%02X", ($uSecQnote & 0xFF)));
       &DisplayDebug(1,"MidiFileHeader: tempo rec: @tempoRec ($time - $tempo bpm)");
       push (@trk, @tempoRec);
+      $lastTempoTime = $time;
    }
 
    # Add end-of-track and set final track record length.
