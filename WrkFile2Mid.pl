@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # ==============================================================================
-# FILE: WrkFile2Mid.pl                                                4-11-2026
+# FILE: WrkFile2Mid.pl                                                4-15-2026
 #
 # SERVICES: Parse Cakewalk WRK file.  
 #
@@ -27,6 +27,13 @@
 #   was created, syxmidi, to fill this need. Syxmidi can be used standalone or 
 #   as integrated with this program's -s option.
 #
+#   Syxmidi provides interfacing to the ALSA rawmidi API. These functions are
+#   primarily used with the WrkFile2Mid -m, -M, and -s options. Syxmidi is linux 
+#   only at this time. See the syxmidi documentation for build details. The 
+#   syxmidi executable must be located in the WrkFile2Mid directory. Long term 
+#   plan is to replace syxmidi integration with the MIDI::RtMidi::FFI::Device 
+#   module once it implements the needed rawmidi functions.
+#
 #   Twelve Tone Cakewalk, and the WRK file, conform to the MIDI 1.0 standard. In
 #   this standard, a MIDI port connection has 16 channels. More than 16 channels
 #   requires multiple MIDI ports. An early interfacing product was the MPU-401.
@@ -45,14 +52,6 @@
 #   The pmidi program, if not already present, is installed using the Linux 
 #   package manager. e.g. 'sudo apt install pmidi'. Multiple MIDI ports are 
 #   specified using its -p option. e.g. pmidi -p 24:0,24:1 file.mid.
-#
-#   Syxmidi is a small C language tool that is integrated with this version of 
-#   WrkFile2Mid. It provides the needed interfacing functions to the ALSA rawmidi
-#   API. These functions are only used with the WrkFile2Mid -m, -M, and -s options. 
-#   Syxmidi is a Linux only program at this time. See the syxmidi documentation
-#   for build details. The syxmidi executable should be located in the WrkFile2Mid
-#   directory. Long term plan is to replace syxmidi integration with the MIDI::
-#   RtMidi::FFI::Device module once it implements the needed rawmidi functions.
 #
 #   There is a lot of debug messaging code (-d) that was used to learn the ins
 #   and outs of WRK and MIDI files during program developemt. It was left in for 
@@ -75,6 +74,7 @@
 #
 #   v0.1   Initial release.
 #   v0.2   MIDI file tempo correction.
+#   v0.3   Fixed track specified sysex and added -N option.
 # ==============================================================================
 use strict;
 use warnings;
@@ -88,7 +88,7 @@ use WrkFile2Mid;
 # ==============================================================================
 # Global Variables
 our %cliOpts = ();                                # CLI options working hash
-getopts('hauvefmnM:p:s:d:c:t:x:z:', \%cliOpts);   # Load CLI options hash
+getopts('hauvefmnNM:p:s:d:c:t:x:z:', \%cliOpts);  # Load CLI options hash
 
 our ($ExecutableName) = ($0 =~ /([^\/\\]*)$/);    # Program name.
 our $WorkingDir;                                  # Working directory.
@@ -99,7 +99,7 @@ else {
    $WorkingDir = getcwd;
 }
 our $Syxmidi = join('/', $WorkingDir, 'syxmidi'); # syxmidi tool.
-our $Version = 'v0.2';                            # Program version string.
+our $Version = 'v0.3';                            # Program version string.
 
 # The following hashs holds WRK file global data. Various chunck processors store
 # data here. The primary used entries are 'version' and 'timebase'.
@@ -269,9 +269,8 @@ GENERAL DESCRIPTION
    adjustments are applied during MIDI output file creation unless the -n 
    option (no adjust) is specified.
 
-   NOTE: This version of WrkFile2Mid uses the syxmidi tool for the -m, -M,
-   and -s options. If these options are used, the syxmidi executable must
-   be present in the WrkFile2Mid directory. See the syxmidi documentation.
+   NOTE: This WrkFile2Mid version requires the syxmidi tool. Its executable
+   must be located with WrkFile2Mid. See the syxmidi documentation.
 
    This program has been tested with Cakewalk WRK file versions 2.0, 3.0,
    and 'new 4.0'. New 4.0 identifies as 3.0 but has additional record types.
@@ -353,6 +352,11 @@ GENERAL DESCRIPTION
           When not disabled, MIDI control events are added and note event data 
           is adjusted. Following WRK file to MIDI file conversion, a summary 
           of the adjustments performed will be displayed.
+          
+      -N  Disables the inclusion of track specified sysex data in the MIDI 
+          file. MIDI file sysex data is not throttleable and may result in
+          MIDI transmission errors. This option is independent of the -a 
+          option functionality.  
 
    Funtions of a diagnostic nature are also available.
    
@@ -370,7 +374,7 @@ GENERAL DESCRIPTION
 USAGE:
    $ExecutableName  [-h] [-d [<lvl>]] [-a] [-f] [-e <file>] [-s <file>.sxd] 
                    [-p <n>|auto] [-z <usec>] [-M <map>] [-t <trk>[,<trk]] [-m]
-                   [-c <file>] [-n] [-u] [-v] [-x <file>] [<path>/]<file>
+                   [-c <file>] [-n] [-N] [-u] [-v] [-x <file>] [<path>/]<file>
 
    -h            Displays program usage text.
    -d <lvl>      Run at specified debug level; 1-3. Higher number, more detail. 
@@ -390,6 +394,7 @@ USAGE:
    -c <file>     Check the specified file for valid MIDI format.
    -m            Show available MIDI devices.
    -n            Don't use WRK file track/measure adjustment values.
+   -N            Don't use track specified sysex data.
    -u            Show WRK file unknown chunkIds.
    -v            Display extracted WRK file data and then exit.
    -x <file>     Dump specified file as hex bytes.             
@@ -684,13 +689,16 @@ sub ProcessNoteOff {
 #       1D       28 00  ...
 #       
 # CALLING SYNTAX:
-#    $result = &ProcessEvents($ArrayPnt, $TrackData, $Id, $WrkGlobal, $Adjust, $Lyric);
+#    $result = &ProcessEvents($ArrayPnt, $SysexBank, $TrackData, $Id, $WrkGlobal, 
+#                             $TrkSyx, $Adjust, $Lyric);
 #
 # ARGUMENTS:
 #    $ArrayPnt         Pointer to output array.
+#    $SysexBank        Pointer to %SysexBank hash.
 #    $TrackData        Pointer to track data hash.
 #    $Id               Track to process.
 #    $WrkGlobal        Pointer to %WrkGlobal.
+#    $TrkSyx           'yes' or 'no'. Include track specified sysex.
 #    $Adjust           'yes' or 'no'. Apply WRK adjustment values.
 #    $Lyric            'yes' or 'no'. Track contains lyrics.
 #
@@ -701,7 +709,7 @@ sub ProcessNoteOff {
 #    None
 # =============================================================================
 sub ProcessEvents {
-   my ($ArrayPnt, $TrackData, $Id, $WrkGlobal, $Adjust, $Lyric) = @_;
+   my ($ArrayPnt, $SysexBank, $TrackData, $Id, $WrkGlobal, $TrkSyx, $Adjust, $Lyric) = @_;
    my ($eventCnt, $lastTime, $lastEvent, $offAt) = (0,0,0,0);
    my ($eventTime, $event, $channel, $type, @data, $lyricLen, @lyricText);
    my %noteOff = ();                # See &ProcessNoteOff for hash description.
@@ -720,7 +728,8 @@ sub ProcessEvents {
       $event = splice(@eventBytes, 0, 1);                 # Event byte
       $type = substr($event, 0, 1);                       # Isolate type.
       $channel = $$TrackData{$Id}{'channel'} & 0x0F;      # Get channel nibble.
-      $event = join('', $type, sprintf("%1X", $channel)); # Add channel to event
+      # Include channel number in event unless System Common Message.
+      $event = join('', $type, sprintf("%1X", $channel)) unless ($type eq 'F');
       $type = join('', $type, '0');                       # Normalize type.
       &DisplayDebug(3,"eventTime: $eventTime (@time)   channel: $channel   " .
                       "event: $event   type: $type");
@@ -802,19 +811,14 @@ sub ProcessEvents {
       elsif ($type eq 'F0') {                # System Common Messages
          next if ($event eq 'F4' or $event eq 'F5');  # Ignore undefined events.
          if ($event eq 'F0') {                        # F0 sysex data
-            # Get the embedded sysex data. Error if no F7 found.
-            for (my $y = 0; $y <= $#eventBytes; $y++) {
-               if ($eventBytes[$y] eq 'F7') {
-                  @data = splice(@eventBytes, 0, $y +1);
-                  unshift (@data, $event);   # Include F0 for &SysexToTrack below
-                  last;
-               }
-            }
-            unless (scalar @data > 0) {
-               &ColorMessage("ProcessEvents: invalid sysex. No F7: @eventBytes",
-                             "BRIGHT_RED", '');
-               return 1;
-            }
+            # Four bytes following F0 is the bank number of the sysex data
+            # to be used. 
+            my @num = splice(@eventBytes, 0, 4);
+            my $bankNum = (hex($num[3]) << 24) + (hex($num[2]) << 16) + 
+                          (hex($num[1]) << 8) + hex($num[0]);
+            @data = @{ $$SysexBank{$bankNum}{'sysex'} };
+            @data = ('F0','F7') if ($TrkSyx eq 'no');    # Set empty sysex record.
+            &DisplayDebug(2,"bankNum: $bankNum   num: @num");
          }
          elsif ($event ge 'F1' and $event le 'F3') {  # Time code thru Song select 
             @data = splice(@eventBytes, 0, 1);
@@ -854,7 +858,7 @@ sub ProcessEvents {
       }
       my @evnt = ();
       if ($event eq 'F0') {                                 # F0 sysex data ?
-         $eventTime = &SysexToTrack($WrkGlobal, \@evnt, \@data, $deltaTime);
+         return 1 if (&SysexToTrack($WrkGlobal, \@evnt, \@data, $deltaTime) < 0);
       }
       else {
          @evnt = &EncodeDeltaTime($deltaTime);              # Time
@@ -1141,6 +1145,7 @@ sub CreateSysexFile {
 #    $TrackList        Comman separated tracks numbers to include.
 #    $Path             Directory path for file.
 #    $File             File name to create. Also needed in MIDI header.
+#    $TrkSyx           'yes' or 'no'. Include track specified sysex.
 #    $AddSyx           'yes' or 'no'. Used by &MidiFileHeader.
 #    $Adjust           'yes' or 'no'. Apply WRK adjustment values.
 #
@@ -1152,7 +1157,7 @@ sub CreateSysexFile {
 # =============================================================================
 sub CreateMidiFile {
    my ($TrackData, $SysexBank, $TempoData, $MeterData, $WrkGlobal, $TrackList, 
-       $Path, $File, $AddSyx, $Adjust) = @_;
+       $Path, $File, $TrkSyx, $AddSyx, $Adjust) = @_;
    my ($midiChannel, $midiPort) = (0,0);
    
    &DisplayDebug(1,"CreateMidiFile TrkList: '$TrackList'  $Path$File ...");
@@ -1250,8 +1255,8 @@ sub CreateMidiFile {
          }
          # Add event data to the track and set its length.
          my $lyric = defined($$TrackData{$key}{'lyric'}) ? 'yes' : 'no';
-         return 1 if (&ProcessEvents(\@trk, $TrackData, $key, $WrkGlobal, $Adjust, 
-                                     $lyric)); 
+         return 1 if (&ProcessEvents(\@trk, $SysexBank, $TrackData, $key, $WrkGlobal,
+                                     $TrkSyx, $Adjust, $lyric)); 
          push (@trk, '00','FF','2F','00');   # End-of-track marker
          my @eotRec = @trk[$#trk-3 .. $#trk];   
          &DisplayDebug(1,"CreateMidiFile track $key eot: @eotRec");
@@ -1710,12 +1715,14 @@ foreach my $file (@fileList) {
          }
          $trackList = $cliOpts{t};  # Use user specified track list.
       }
+      my $trkSyx = defined($cliOpts{N}) ? 'no' : 'yes';
       my $addSyx = defined($cliOpts{a}) ? 'yes' : 'no';
       my $adjust = defined($cliOpts{n}) ? 'no' : 'yes';
       my $midiFile = $fName;
       $midiFile =~ s/wrk$/mid/i;
       exit(1) if (&CreateMidiFile(\%TrackData, \%SysexBank, \%TempoData, \%MeterData,
-                  \%WrkGlobal, $trackList, $fPath, $midiFile, $addSyx, $adjust));
+                  \%WrkGlobal, $trackList, $fPath, $midiFile, $trkSyx, $addSyx, 
+                  $adjust));
 
    # ----------
    # Show a summary of the processed WRK file.
@@ -1723,6 +1730,9 @@ foreach my $file (@fileList) {
       &ColorMessage("Summary for $fName", "WHITE", '');
       my $msg = "WRK file specified adjustments were applied.";
       $msg =~ s/applied\.$/not applied\./ if ($adjust eq 'no');
+      &ColorMessage("$msg", "WHITE", '');
+      $msg = "Track specified sysex data was included.";
+      $msg =~ s/included\.$/not included\./ if ($trkSyx eq 'no');
       &ColorMessage("$msg", "WHITE", '');
 
       my @sysexKeys = sort {$a <=> $b} keys(%SysexBank);
