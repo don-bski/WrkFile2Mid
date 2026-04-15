@@ -25,7 +25,7 @@ and 'new 4.0'. New 4.0 identifies as 3.0 but has additional record types.
 The MIDI format 1 output file has been used with Audacity, Rosegarden, 
 and CLI pmidi (linuxmint) players. 
 
-**NOTE:** This WrkFile2Mid version requires the syxmidi tool. Its executable
+**NOTE:** This WrkFile2Mid version requires the syxmidi tool. This executable
 must be located with WrkFile2Mid. This tool is used to show the available ALSA 
 MIDI ports and throttle the sysex data transmissions. See the syxmidi documentation.
    
