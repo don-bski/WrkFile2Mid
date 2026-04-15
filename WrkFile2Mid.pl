@@ -32,7 +32,7 @@
 #   only at this time. See the syxmidi documentation for build details. The 
 #   syxmidi executable must be located in the WrkFile2Mid directory. Long term 
 #   plan is to replace syxmidi integration with the MIDI::RtMidi::FFI::Device 
-#   module once it implements the needed rawmidi functions.
+#   module when/if it implements the needed rawmidi functions.
 #
 #   Twelve Tone Cakewalk, and the WRK file, conform to the MIDI 1.0 standard. In
 #   this standard, a MIDI port connection has 16 channels. More than 16 channels
@@ -40,7 +40,7 @@
 #   It provided 2 MIDI ports of 16 channels each. Modern USB MIDI connections
 #   have a similar architecture. In support of this, the MIDI standard provides
 #   a meta-event that is placed in each MIDI track. It serves to identify the
-#   MIDI port used for the transmission of the MIDI event data.
+#   MIDI port used for the transmission of each track's MIDI event data.
 #
 #   The newer MIDI standard changed this meta-event. The older meta-event, 00
 #   FF 20 01 <p> is now deprecated. The WrkFile2Mid program uses this older
@@ -72,6 +72,7 @@
 #   See https://midi.org/midi-1-0-detailed-specification for the MIDI file 
 #   specification.
 #
+#   Revision History:
 #   v0.1   Initial release.
 #   v0.2   MIDI file tempo correction.
 #   v0.3   Fixed track specified sysex and added -N option.
@@ -270,7 +271,8 @@ GENERAL DESCRIPTION
    option (no adjust) is specified.
 
    NOTE: This WrkFile2Mid version requires the syxmidi tool. Its executable
-   must be located with WrkFile2Mid. See the syxmidi documentation.
+   must be located with WrkFile2Mid. See the syxmidi documentation for a
+   description of the provided functions.
 
    This program has been tested with Cakewalk WRK file versions 2.0, 3.0,
    and 'new 4.0'. New 4.0 identifies as 3.0 but has additional record types.
@@ -445,7 +447,7 @@ VERSION:
 #    $result = &EncodeDeltaTime($Value);
 #
 # ARGUMENTS:
-#    $Value          Value to be encoded.
+#    $Value     Value to be encoded.   e.g. 65535 -> 83 FF 7F
 #
 # RETURNED VALUES:
 #    1-4 bytes = Success,  () = Error.
@@ -487,7 +489,7 @@ sub EncodeDeltaTime {
 #    $result = &DecodeDeltaTime(\@Bytes);
 #
 # ARGUMENTS:
-#    $Bytes            Pointer to hex text bytes.
+#    $Bytes       Pointer to hex text bytes.   e.g. 84 80 00 -> 65536
 #
 # RETURNED VALUES:
 #    value = Success,  -1 = Error.
@@ -678,9 +680,8 @@ sub ProcessNoteOff {
 #       00 FF 21 01 00                send to midi port 0 (deprecated)
 #       00 FF 03 0A 50 69 7A 7A 20 43 65 6C 6C 69    track name
 #       00 C0 2D        patch 45
-#       00 B0 07 73     volume  115 (track view setting?)
+#       00 B0 07 73     volume  115
 #       00    0A 3C     pan 60
-#       00    07 73     volume 115 again (track event?)
 #       83 5C 90 24 55  1st note @ time 480 (measure 1:0)
 #       1D       24 00  note vel 0 @ 1D later (16th note)
 #       5B       2B 50  2nd note 5B after previous off 
