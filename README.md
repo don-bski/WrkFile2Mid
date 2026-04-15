@@ -25,9 +25,9 @@ and 'new 4.0'. New 4.0 identifies as 3.0 but has additional record types.
 The MIDI format 1 output file has been used with Audacity, Rosegarden, 
 and CLI pmidi (linuxmint) players. 
 
-The syxmidi tool, linux only at this time, is integrated with this version 
-of WrkFile2Mid. The path to the syxmidi executable is the directory holding 
-WrkFile2Mid.pl. Place a copy of syxmidi in this directory.
+**NOTE:** This WrkFile2Mid version requires the syxmidi tool. Its executable
+must be located with WrkFile2Mid. This tool is used to show the available ALSA 
+MIDI ports and throttle the sysex data transmissions. See the syxmidi documentation.
    
 In general, this CLI based program provides the following functions.
    
@@ -124,6 +124,11 @@ Disables use of WRK file specified track/measure adjustment values. When not dis
 MIDI control events are added and note event data is adjusted. Following WRK file to 
 MIDI file conversion, a summary of the adjustments performed will be displayed.
 
+### -N option
+Disables the inclusion of track specified sysex data in the MIDI file. Depending on the
+MIDI sequencer and equipment, lengthy sysex data transmissions during playback might 
+result in MIDI data errors. This option is independent of the -a option functionality.
+          
 ## Diagnostic Funtions
    
 ### -c option
@@ -142,7 +147,7 @@ Displays a hex dump of the specified file. No other processing is performed.
 ```
    WrkFile2Mid.pl  [-h] [-d [<lvl>]] [-a] [-f] [-e <file>] [-s <file>.sxd] 
                    [-p <n>|auto] [-z <us>] [-M <map>] [-t <trk>[,<trk]] [-m]
-                   [-c <file>] [-n] [-u] [-v] [-x <file>] [<path>/]<file>
+                   [-c <file>] [-n] [-N] [-u] [-v] [-x <file>] [<path>/]<file>
 
    -h            Displays program usage text.
    -d <lvl>      Run at specified debug level; 1-3. Higher number, more detail. 
@@ -162,6 +167,7 @@ Displays a hex dump of the specified file. No other processing is performed.
    -c <file>     Check the specified file for valid MIDI format.
    -m            Show available MIDI devices.
    -n            Don't use WRK file track/measure adjustment values.
+   -N            Don't use track specified sysex data.
    -u            Show WRK file unknown chunkIds.
    -v            Display extracted WRK file data and then exit.
    -x <file>     Dump specified file as hex bytes.             
