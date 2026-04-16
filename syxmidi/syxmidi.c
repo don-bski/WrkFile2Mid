@@ -26,8 +26,8 @@
  *   aconnect, or pmidi to resolve.
  * 
  *   Change history
- *   v0.2   04-02-2026    Added -L option.
  *   v0.1   03-30-2026    Initial code release.
+ *   v0.2   04-02-2026    Added -L option.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,215 +91,210 @@ void sighandler(int dum) {
 }
 
 static void *my_malloc(size_t size) {
-	void *p = malloc(size);
-	if (!p) {
-		fprintf(stderr,"Out of memory\n");
-		exit(EXIT_FAILURE);
-	}
-	return p;
+    void *p = malloc(size);
+    if (!p) {
+        fprintf(stderr,"Out of memory\n");
+        exit(EXIT_FAILURE);
+    }
+    return p;
 }
 
 static void add_send_hex_data(const char *str) {
-	 int length;
-	 char *s;
+    int length;
+    char *s;
 
-	 length = (send_hex ? strlen(send_hex) + 1 : 0) + strlen(str) + 1;
-	 s = (char *)my_malloc(length);
-	 if (send_hex) {
-		  strcpy(s, send_hex);
-		  strcat(s, " ");
-	 } else {
-		 s[0] = '\0';
-	 }
-	 strcat(s, str);
-	 free(send_hex);
-	 send_hex = s;
+    length = (send_hex ? strlen(send_hex) + 1 : 0) + strlen(str) + 1;
+    s = (char *)my_malloc(length);
+    if (send_hex) {
+        strcpy(s, send_hex);
+        strcat(s, " ");
+    } else {
+        s[0] = '\0';
+    }
+    strcat(s, str);
+    free(send_hex);
+    send_hex = s;
 }
 
 static int hex_value(char c) {
-	if ('0' <= c && c <= '9')
-		return c - '0';
-	if ('A' <= c && c <= 'F')
-		return c - 'A' + 10;
-	if ('a' <= c && c <= 'f')
-		return c - 'a' + 10;
-	fprintf(stderr,"Invalid -S character %c\n", c);
-	return -1;
+    if ('0' <= c && c <= '9')
+        return c - '0';
+    if ('A' <= c && c <= 'F')
+        return c - 'A' + 10;
+    if ('a' <= c && c <= 'f')
+        return c - 'a' + 10;
+    fprintf(stderr,"Invalid -S character %c\n", c);
+    return -1;
 }
 
 static void parse_data(void) {
-	const char *p;
-	int i, value;
+    const char *p;
+    int i, value;
 
-	send_data = (unsigned char *)my_malloc(strlen(send_hex)); /* guesstimate */
-	i = 0;
-	value = -1; /* value is >= 0 when the first hex digit of a byte has been read */
-	for (p = send_hex; *p; ++p) {
-		int digit;
-		if (isspace((unsigned char)*p)) {
-			if (value >= 0) {
-				send_data[i++] = value;
-				value = -1;
-			}
-			continue;
-		}
-		digit = hex_value(*p);
-		if (digit < 0) {
-			send_data = NULL;
-			return;
-		}
-		if (value < 0) {
-			value = digit;
-		} else {
-			send_data[i++] = (value << 4) | digit;
-			value = -1;
-		}
-	}
-	if (value >= 0)
-		send_data[i++] = value;
-	send_data_length = i;
+    send_data = (unsigned char *)my_malloc(strlen(send_hex)); /* guesstimate */
+    i = 0;
+    value = -1;               /* value is >= 0 after read of first hex digit */
+    for (p = send_hex; *p; ++p) {
+        int digit;
+        if (isspace((unsigned char)*p)) {
+            if (value >= 0) {
+                send_data[i++] = value;
+                value = -1;
+            }
+            continue;
+        }
+        digit = hex_value(*p);
+        if (digit < 0) {
+            send_data = NULL;
+            return;
+        }
+        if (value < 0) {
+            value = digit;
+        } else {
+            send_data[i++] = (value << 4) | digit;
+            value = -1;
+        }
+    }
+    if (value >= 0)
+        send_data[i++] = value;
+    send_data_length = i;
 }
 
 static void list_device(snd_ctl_t *ctl, int card, int device) {
-	snd_rawmidi_info_t *info;
-	const char *name;
-	const char *sub_name;
-	int subs, subs_in, subs_out;
-	int sub;
-	int err;
+    snd_rawmidi_info_t *info;
+    const char *name;
+    const char *sub_name;
+    int subs, subs_in, subs_out;
+    int sub;
+    int err;
 
-	snd_rawmidi_info_alloca(&info);
-	snd_rawmidi_info_set_device(info, device);
+    snd_rawmidi_info_alloca(&info);
+    snd_rawmidi_info_set_device(info, device);
+    snd_rawmidi_info_set_stream(info, SND_RAWMIDI_STREAM_INPUT);
+    err = snd_ctl_rawmidi_info(ctl, info);
+    if (err >= 0)
+        subs_in = snd_rawmidi_info_get_subdevices_count(info);
+    else
+        subs_in = 0;
 
-	snd_rawmidi_info_set_stream(info, SND_RAWMIDI_STREAM_INPUT);
-	err = snd_ctl_rawmidi_info(ctl, info);
-	if (err >= 0)
-		subs_in = snd_rawmidi_info_get_subdevices_count(info);
-	else
-		subs_in = 0;
+    snd_rawmidi_info_set_stream(info, SND_RAWMIDI_STREAM_OUTPUT);
+    err = snd_ctl_rawmidi_info(ctl, info);
+    if (err >= 0)
+        subs_out = snd_rawmidi_info_get_subdevices_count(info);
+    else
+        subs_out = 0;
 
-	snd_rawmidi_info_set_stream(info, SND_RAWMIDI_STREAM_OUTPUT);
-	err = snd_ctl_rawmidi_info(ctl, info);
-	if (err >= 0)
-		subs_out = snd_rawmidi_info_get_subdevices_count(info);
-	else
-		subs_out = 0;
+    subs = subs_in > subs_out ? subs_in : subs_out;
+    if (!subs)
+        return;
 
-	subs = subs_in > subs_out ? subs_in : subs_out;
-	if (!subs)
-		return;
-
-	for (sub = 0; sub < subs; ++sub) {
-		snd_rawmidi_info_set_stream(info, sub < subs_in ?
-					    SND_RAWMIDI_STREAM_INPUT :
-					    SND_RAWMIDI_STREAM_OUTPUT);
-		snd_rawmidi_info_set_subdevice(info, sub);
-		err = snd_ctl_rawmidi_info(ctl, info);
-		if (err < 0) {
-			fprintf(stderr,"cannot get rawmidi information %d:%d:%d: %s\n",
-			      card, device, sub, snd_strerror(err));
-			return;
-		}
-		name = snd_rawmidi_info_get_name(info);
-		sub_name = snd_rawmidi_info_get_subdevice_name(info);
-		if (sub == 0 && sub_name[0] == '\0') {
-			printf("%c%c  hw:%d,%d    %s",
-			       sub < subs_in ? 'I' : ' ',
-			       sub < subs_out ? 'O' : ' ',
-			       card, device, name);
-			if (subs > 1)
-				printf(" (%d subdevices)", subs);
-			putchar('\n');
-			break;
-		} else {
-			printf("%c%c  hw:%d,%d,%d  %s\n",
-			       sub < subs_in ? 'I' : ' ',
-			       sub < subs_out ? 'O' : ' ',
-			       card, device, sub, sub_name);
-		}
-	}
+    for (sub = 0; sub < subs; ++sub) {
+        snd_rawmidi_info_set_stream(info, sub < subs_in ?
+            SND_RAWMIDI_STREAM_INPUT : SND_RAWMIDI_STREAM_OUTPUT);
+        snd_rawmidi_info_set_subdevice(info, sub);
+        err = snd_ctl_rawmidi_info(ctl, info);
+        if (err < 0) {
+            fprintf(stderr,"cannot get rawmidi information %d:%d:%d: %s\n",
+                card, device, sub, snd_strerror(err));
+            return;
+        }
+        name = snd_rawmidi_info_get_name(info);
+        sub_name = snd_rawmidi_info_get_subdevice_name(info);
+        if (sub == 0 && sub_name[0] == '\0') {
+            printf("%c%c  hw:%d,%d    %s",
+                   sub < subs_in ? 'I' : ' ',
+                   sub < subs_out ? 'O' : ' ',
+                   card, device, name);
+            if (subs > 1)
+                printf(" (%d subdevices)", subs);
+            putchar('\n');
+            break;
+        } else {
+            printf("%c%c  hw:%d,%d,%d  %s\n",
+                   sub < subs_in ? 'I' : ' ',
+                   sub < subs_out ? 'O' : ' ',
+                   card, device, sub, sub_name);
+        }
+    }
 }
 
 static void list_card_devices(int card) {
-	snd_ctl_t *ctl;
-	char name[32];
-	int device;
-	int err;
+    snd_ctl_t *ctl;
+    char name[32];
+    int device;
+    int err;
 
-	sprintf(name, "hw:%d", card);
-	if ((err = snd_ctl_open(&ctl, name, 0)) < 0) {
-		fprintf(stderr,"cannot open control for card %d: %s", card, snd_strerror(err));
-		return;
-	}
-	device = -1;
-	for (;;) {
-		if ((err = snd_ctl_rawmidi_next_device(ctl, &device)) < 0) {
-			fprintf(stderr,"cannot determine device number: %s", snd_strerror(err));
-			break;
-		}
-		if (device < 0)
-			break;
-		list_device(ctl, card, device);
-	}
-	snd_ctl_close(ctl);
+    sprintf(name, "hw:%d", card);
+    if ((err = snd_ctl_open(&ctl, name, 0)) < 0) {
+        fprintf(stderr,"cannot open control for card %d: %s", card, snd_strerror(err));
+        return;
+    }
+    device = -1;
+    for (;;) {
+        if ((err = snd_ctl_rawmidi_next_device(ctl, &device)) < 0) {
+            fprintf(stderr,"cannot determine device number: %s", snd_strerror(err));
+            break;
+        }
+        if (device < 0)
+            break;
+        list_device(ctl, card, device);
+    }
+    snd_ctl_close(ctl);
 }
 
 static void device_list(void) {
-	int card, err;
+    int card, err;
 
-	card = -1;
-	if ((err = snd_card_next(&card)) < 0) {
-		fprintf(stderr,"cannot determine card number: %s", snd_strerror(err));
-		return;
-	}
-	if (card < 0) {
-		fprintf(stderr,"no sound card found");
-		return;
-	}
-	puts("Dir Device    Name");
-	do {
-		list_card_devices(card);
-		if ((err = snd_card_next(&card)) < 0) {
-			fprintf(stderr,"cannot determine card number: %s", snd_strerror(err));
-			break;
-		}
-	} while (card >= 0);
+    card = -1;
+    if ((err = snd_card_next(&card)) < 0) {
+        fprintf(stderr,"cannot determine card number: %s", snd_strerror(err));
+        return;
+    }
+    if (card < 0) {
+        fprintf(stderr,"no sound card found");
+        return;
+    }
+    puts("Dir Device    Name");
+    do {
+        list_card_devices(card);
+        if ((err = snd_card_next(&card)) < 0) {
+            fprintf(stderr,"cannot determine card number: %s", snd_strerror(err));
+            break;
+        }
+    } while (card >= 0);
 }
 
 static void showlist() {
-	snd_seq_client_info_t *cinfo;
-	snd_seq_port_info_t *pinfo;
-	int  client;
-	int  err;
-	snd_seq_t *handle;
+    snd_seq_client_info_t *cinfo;
+    snd_seq_port_info_t *pinfo;
+    int  client;
+    int  err;
+    snd_seq_t *handle;
 
-	err = snd_seq_open(&handle, "hw", SND_SEQ_OPEN_DUPLEX, 0);
-	if (err < 0)
-		fprintf(stderr,"Could not open sequencer %s", snd_strerror(errno));
+    err = snd_seq_open(&handle, "hw", SND_SEQ_OPEN_DUPLEX, 0);
+    if (err < 0)
+        fprintf(stderr,"Could not open sequencer %s", snd_strerror(errno));
+    snd_seq_client_info_alloca(&cinfo);
+    snd_seq_client_info_set_client(cinfo, -1);
+    printf(" Port   Port name\n");
 
-	snd_seq_client_info_alloca(&cinfo);
-	snd_seq_client_info_set_client(cinfo, -1);
-	printf(" Port   Port name\n");
-
-	while (snd_seq_query_next_client(handle, cinfo) >= 0) {
-		client = snd_seq_client_info_get_client(cinfo);
-		snd_seq_port_info_alloca(&pinfo);
-		snd_seq_port_info_set_client(pinfo, client);
-
-		snd_seq_port_info_set_port(pinfo, -1);
-		while (snd_seq_query_next_port(handle, pinfo) >= 0) {
-			int  cap;
-
-			cap = (SND_SEQ_PORT_CAP_SUBS_WRITE|SND_SEQ_PORT_CAP_WRITE);
-			if ((snd_seq_port_info_get_capability(pinfo) & cap) == cap) {
-				printf("%3d:%-3d %s\n",
-					snd_seq_port_info_get_client(pinfo),
-					snd_seq_port_info_get_port(pinfo),
-//					snd_seq_client_info_get_name(cinfo),
-					snd_seq_port_info_get_name(pinfo));
-			}
-		}
-	}
+    while (snd_seq_query_next_client(handle, cinfo) >= 0) {
+        client = snd_seq_client_info_get_client(cinfo);
+        snd_seq_port_info_alloca(&pinfo);
+        snd_seq_port_info_set_client(pinfo, client);
+        snd_seq_port_info_set_port(pinfo, -1);
+        while (snd_seq_query_next_port(handle, pinfo) >= 0) {
+            int  cap;
+            cap = (SND_SEQ_PORT_CAP_SUBS_WRITE|SND_SEQ_PORT_CAP_WRITE);
+            if ((snd_seq_port_info_get_capability(pinfo) & cap) == cap) {
+                printf("%3d:%-3d %s\n",
+                    snd_seq_port_info_get_client(pinfo),
+                    snd_seq_port_info_get_port(pinfo),
+                    // snd_seq_client_info_get_name(cinfo),
+                    snd_seq_port_info_get_name(pinfo));
+            }
+        }
+    }
 }
 
 // ========== main ==========// 
@@ -310,31 +305,31 @@ int main(int argc,char** argv) {
     receive_file_name = NULL;
     send_hex = NULL;
     send_data = NULL;
-	 int do_send_hex = 0;
+    int do_send_hex = 0;
     snd_rawmidi_t *dev_in = NULL;
     snd_rawmidi_t *dev_out = NULL;
     int quiet = 0;
 
     int c;
-	 while ((c = getopt(argc, argv, "hqlLt:d:r:s:S:")) != -1) {
+    while ((c = getopt(argc, argv, "hqlLt:d:r:s:S:")) != -1) {
         switch (c) {
-		  case 'h':
-			   usage();
-			   return 0;
+        case 'h':
+            usage();
+            return 0;
         case 'q':
             quiet = 1;
             break;
- 		  case 't':
-			   sysex_delay = atoi(optarg);
-			   break;
-		  case 'l':
-		      device_list();
-			   return 0;
-			   break;
-		  case 'L':
-			   showlist();
-			   return 0;
-			   break;
+        case 't':
+            sysex_delay = atoi(optarg);
+            break;
+        case 'l':
+            device_list();
+            return 0;
+            break;
+        case 'L':
+            showlist();
+            return 0;
+            break;
         case 'd':
             device = optarg;
             break;
@@ -349,19 +344,19 @@ int main(int argc,char** argv) {
             if (optarg)
                 add_send_hex_data(optarg);
             break;
-		  default:
+        default:
             fprintf(stderr,"Unsupported option %s. See help.\n", argv[optind]);
-			   return 1;
-		  }
-	 }
+                return 1;
+        }
+    }
 
     if (do_send_hex) {
-		  /* data for -S can be specified as multiple arguments */
-		  if (!send_hex && !argv[optind]) {
-			   fprintf(stderr,"Please specify some sysex with -S option.");
-			   return 1;
-		  }
-		  for (; argv[optind]; ++optind)
+        /* data for -S can be specified as multiple arguments */
+        if (!send_hex && !argv[optind]) {
+            fprintf(stderr,"Please specify some sysex with -S option.");
+            return 1;
+        }
+        for (; argv[optind]; ++optind)
             add_send_hex_data(argv[optind]);
             
         if (quiet == 0)
@@ -374,7 +369,7 @@ int main(int argc,char** argv) {
     } else {
         if (argv[optind]) {
             fprintf(stderr,"%s is not an option.", argv[optind]);
-			   return 1;
+               return 1;
         }
     }
 
@@ -402,12 +397,12 @@ int main(int argc,char** argv) {
         if (quiet == 0)
             fprintf(stdout,"Sending sysex using %i usec delay between bytes.\n", sysex_delay);
         for (i = 0; i < send_data_length; i++) {
-//            printf("i: %d - %02X\n", i, send_data[i]);
+            // printf("i: %d - %02X\n", i, send_data[i]);
             snd_rawmidi_write(dev_out, send_data+i, sizeof(char));
             snd_rawmidi_drain(dev_out);
             usleep(sysex_delay);
         }
-	     free(send_data);
+        free(send_data);
         if (quiet == 0)
             fprintf(stdout,"Transmission complete.\n");
     }
@@ -451,7 +446,7 @@ int main(int argc,char** argv) {
         if (quiet == 0)
             fprintf(stdout,"Sending sysex using %i usec delay between bytes.\n", sysex_delay);
         for (i = 0; i < file_size; i++) {
-//            printf("i: %d - %02X\n", i, buffer[i]);
+            // printf("i: %d - %02X\n", i, buffer[i]);
             snd_rawmidi_write(dev_out, buffer+i, sizeof(char));
             snd_rawmidi_drain(dev_out);
             usleep(sysex_delay);
