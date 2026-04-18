@@ -731,8 +731,10 @@ sub ProcessEvents {
       $event = splice(@eventBytes, 0, 1);                 # Event byte
       $type = substr($event, 0, 1);                       # Isolate type.
       $channel = $$TrackData{$Id}{'channel'} & 0x0F;      # Get channel nibble.
-      # Include channel number in event unless System Common Message.
-      $event = join('', $type, sprintf("%1X", $channel)) unless ($type eq 'F');
+      # Add channel number to event if not System Common Message or Lyric track.
+      unless ($type eq 'F' or $Lyric eq 'yes') {
+         $event = join('', $type, sprintf("%1X", $channel));
+      }
       $type = join('', $type, '0');                       # Normalize type.
       &DisplayDebug(3,"eventTime: $eventTime (@time)   channel: $channel   " .
                       "event: $event   type: $type");
