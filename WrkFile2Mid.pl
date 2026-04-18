@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # ==============================================================================
-# FILE: WrkFile2Mid.pl                                                4-15-2026
+# FILE: WrkFile2Mid.pl                                                4-18-2026
 #
 # SERVICES: Parse Cakewalk WRK file.  
 #
@@ -432,7 +432,7 @@ VERSION:
 ));
 
 # =============================================================================
-# FUNCTION:  EncodeDeltaTime
+# FUNCTION:  EncodeVariLength
 #
 # DESCRIPTION:
 #    This routine is called to encode the specified numeric value to a MIDI
@@ -444,7 +444,7 @@ VERSION:
 #    representation used in this program.
 #
 # CALLING SYNTAX:
-#    $result = &EncodeDeltaTime($Value);
+#    $result = &EncodeVariLength($Value);
 #
 # ARGUMENTS:
 #    $Value     Value to be encoded.   e.g. 65535 -> 83 FF 7F
@@ -455,12 +455,12 @@ VERSION:
 # ACCESSED GLOBAL VARIABLES:
 #    None
 # =============================================================================
-sub EncodeDeltaTime {
+sub EncodeVariLength {
    my ($Value) = @_;
    my @bytes = ();
 
    if ($Value > 0x0FFFFFFF) {          # 2^28 -1 = 268,435,455
-      &ColorMessage("EncodeDeltaTime: invalid value $Value", "BRIGHT_RED", '');
+      &ColorMessage("EncodeVariLength: invalid value $Value", "BRIGHT_RED", '');
    }
    else {
       unshift(@bytes, sprintf("%02X", ($Value & 0x7F)));   # Save LSB 7 bits.
@@ -475,7 +475,7 @@ sub EncodeDeltaTime {
 }
 
 # =============================================================================
-# FUNCTION:  DecodeDeltaTime
+# FUNCTION:  DecodeVariLength
 #
 # DESCRIPTION:
 #    This routine is called to decode up to four 7 bit bytes of the specified 
@@ -486,7 +486,7 @@ sub EncodeDeltaTime {
 #    representation used in this program.
 #
 # CALLING SYNTAX:
-#    $result = &DecodeDeltaTime(\@Bytes);
+#    $result = &DecodeVariLength(\@Bytes);
 #
 # ARGUMENTS:
 #    $Bytes       Pointer to hex text bytes.   e.g. 84 80 00 -> 65536
@@ -497,12 +497,12 @@ sub EncodeDeltaTime {
 # ACCESSED GLOBAL VARIABLES:
 #    None
 # =============================================================================
-sub DecodeDeltaTime {
+sub DecodeVariLength {
    my ($Bytes) = @_;
    my $value = 0;
 
    if ($#$Bytes > 3 or hex($$Bytes[-1]) > 127) {
-      &ColorMessage("DecodeDeltaTime: invalid bytes @$Bytes", "BRIGHT_RED", '');
+      &ColorMessage("DecodeVariLength: invalid bytes @$Bytes", "BRIGHT_RED", '');
    }
    else {
       foreach my $byte (@$Bytes) {
@@ -572,18 +572,20 @@ sub SysexToTrack {
          
       # Create sysex record and add it to the output array. The sysex is broken up
       # into 16 byte chunks to facilitate transmission throttling via $delayTicks.
+      # <deltaTime> F0 <variLength> <sysex bytes after F0>      Initial message
+      # <deltaTime> F7 <variLength> <sysex bytes>     Subsequent escaped message(s)
       splice(@syx, 0, 1);           # Remove F0 for length calc.
-      my @syxRec = &EncodeDeltaTime($deltaTime);
+      my @syxRec = &EncodeVariLength($deltaTime);
       push (@syxRec, 'F0');
       while (scalar @syx > 16) {
          my @bytes = splice(@syx, 0, 16);
          &DisplayDebug(2,"SysexToTrack: --> @bytes");
-         push(@syxRec, &EncodeDeltaTime(scalar @bytes), @bytes);
-         push(@syxRec, &EncodeDeltaTime($delayTicks), 'F7'); # sysex continue
+         push(@syxRec, &EncodeVariLength(scalar @bytes), @bytes);
+         push(@syxRec, &EncodeVariLength($delayTicks), 'F7'); # sysex continue
          $elapseTime += $delayTicks;
       }
       &DisplayDebug(2,"SysexToTrack: --> @syx");
-      push(@syxRec, &EncodeDeltaTime(scalar @syx), @syx);
+      push(@syxRec, &EncodeVariLength(scalar @syx), @syx);
       &DisplayDebug(2,"SysexToTrack: @syxRec");
       push (@$ArrayPnt, @syxRec);
       $deltaTime = $delayTicks;    # Subsequent F0..F7 deltaTime value.
@@ -634,7 +636,7 @@ sub ProcessNoteOff {
       foreach my $noteEvent (@notesOff) {
          my ($event, $note) = split(':', $noteEvent);
          my $deltaTime = $offTime - $$LastTime;
-         my @nOff = &EncodeDeltaTime($deltaTime);               # Time
+         my @nOff = &EncodeVariLength($deltaTime);               # Time
          push (@nOff, $event) if ($event ne $$LastEvent);       # Event
          push (@nOff, $note, '00');              # Note key and velocity 0
          &DisplayDebug(3,"  NoteOff: @nOff  offTime: $offTime  eventTime: $TimeLimit");
@@ -862,7 +864,7 @@ sub ProcessEvents {
          return 1 if (&SysexToTrack($WrkGlobal, \@evnt, \@data, $deltaTime) < 0);
       }
       else {
-         @evnt = &EncodeDeltaTime($deltaTime);              # Time
+         @evnt = &EncodeVariLength($deltaTime);              # Time
          if ($event eq '02') {                              # Add lyric meta-data?
             push (@evnt, 'FF','05', sprintf("%02X", $lyricLen), @lyricText);
             $lastEvent = '';
@@ -1022,7 +1024,7 @@ sub MidiFileHeader {
    my $tempoTime;
    foreach my $time (@tempos) {
       $tempoTime = $time - $lastTempoTime;     # Offset from previous tempo time
-      my @tempoRec = &EncodeDeltaTime($tempoTime);
+      my @tempoRec = &EncodeVariLength($tempoTime);
       push (@tempoRec, 'FF','51','03');
       my $tempo = $$TempoData{$time}/100;
       my $uSecQnote = 60000000 / $tempo;
