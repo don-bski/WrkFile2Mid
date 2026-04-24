@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # ==============================================================================
-# FILE: WrkFile2Mid.pm                                                4-18-2026
+# FILE: WrkFile2Mid.pm                                                4-24-2026
 #
 # SERVICES: Support code for WrkFile2Mid.pl.  
 #
@@ -114,7 +114,8 @@ sub ColorMessage {
 #
 # DESCRIPTION:
 #    Displays a debug message to the user if the current program debug level 
-#    is >= to the message debug level. Debug level colors message. 
+#    is >= to the message debug level. Debug level colors message unless it
+#    includes 'm' for monochrome output. 
 #
 # CALLING SYNTAX:
 #    $result = &DisplayDebug($Level, $Message);
@@ -246,7 +247,8 @@ sub WriteFile {
 # FUNCTION:  ReadData
 #
 # DESCRIPTION:
-#    This routine reads the specified file into the specified array.
+#    This routine reads the specified file into the specified array. The opened
+#    fileHandle is set for binary (raw bytes) reading using binmode.
 #
 # CALLING SYNTAX:
 #    $result = &ReadData($Filename, \$Data, $MaxSize);
@@ -289,10 +291,11 @@ sub ReadData {
 # DESCRIPTION:
 #    This routine writes the MIDI data specified by the array pointer to a 
 #    new file. The specified path/file is overwritten if it already exists.
-#    Binary file mode is used.
+#    The opened fileHandle is set for binary (raw bytes) using binmode.
 #
-#    The MIDI data is expected to be hexidecimal character bytes. Each digit
-#    pair is packed to 8 bit raw binary as part of the write.
+#    The MIDI data is expected to be an array of hexidecimal character bytes.
+#    Each byte's digit pair is packed to 8 bit raw binary as part of the 
+#    write. Example @array: 4D 54 72 6B 00 00 09 94 ...
 #
 # CALLING SYNTAX:
 #    $result = &WriteData($Filename, $ArrayPtr);
@@ -1331,7 +1334,14 @@ sub TimebaseChunk {
 # FUNCTION:  ShowMidiDevices
 #
 # DESCRIPTION:
-#    Called to show the available MIDI devices.
+#    Called to show the available MIDI devices. Referenced hash expected format.
+#    $port is a numeric value; 0, 1, etc.
+#
+#    $$Devices{'raw'}->{$port}{'dir'}
+#    $$Devices{'raw'}->{$port}{'dev'}
+#    $$Devices{'raw'}->{$port}{'name'}
+#    $$Devices{'seq'}->{$port}{'dev'}
+#    $$Devices{'seq'}->{$port}{'name'}
 #
 # CALLING SYNTAX:
 #    $result = &ShowMidiDevices($Devices);
@@ -1432,8 +1442,8 @@ sub SendSyx {
 #    content. Sysex banks with Auto set to 'yes' are processed. The Port value
 #    is used to direct the transmission to the MIDI device.
 #
-#    This routine is also called when the user specifies a device port. In the
-#    case the specified port overrides the SxdFileData specified port. 
+#    This routine is also called when the user specifies a device port. In this
+#    case, the specified port overrides the SxdFileData specified port. 
 #
 # CALLING SYNTAX:
 #    $result = &SxdAutoSend($Devices, $SxdFileData, $XmitDelay, $Syxmidi);

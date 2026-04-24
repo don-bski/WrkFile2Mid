@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # ==============================================================================
-# FILE: WrkFile2Mid.pl                                                4-18-2026
+# FILE: WrkFile2Mid.pl                                                4-24-2026
 #
 # SERVICES: Parse Cakewalk WRK file.  
 #
@@ -374,14 +374,14 @@ GENERAL DESCRIPTION
           performed.
 
 USAGE:
-   $ExecutableName  [-h] [-d [<lvl>]] [-a] [-f] [-e <file>] [-s <file>.sxd] 
+   $ExecutableName  [-h] [-d <lvl>[m]] [-a] [-f] [-e <file>] [-s <file>.sxd] 
                    [-p <n>|auto] [-z <usec>] [-M <map>] [-t <trk>[,<trk]] [-m]
                    [-c <file>] [-n] [-N] [-u] [-v] [-x <file>] [<path>/]<file>
 
    -h            Displays program usage text.
-   -d <lvl>      Run at specified debug level; 1-3. Higher number, more detail. 
+   -d <lvl>[m]   Run at specified debug level; 1-3. Higher number, more detail. 
                  Colored text is used for each level. Specify 'm' (e.g. 2m),
-                 for monochrome text. Useful for redirected console output.
+                 for monochrome text. Useful with redirected console output.
 
    -t <trk>      Process only the specified track(s).
    -a            Include sysex bank data in track 1 of MIDI file. 
@@ -1135,8 +1135,7 @@ sub CreateSysexFile {
 #    extracted data is stored in the %TrackData hash. Each tracks event data
 #    will be in a separate MIDI file track.
 #
-#    $TrackList specifies a comma separated list of tracks to process. Note
-#    track numbers start at 0 as key sorted in the %TrackData hash.
+#    $TrackList specifies a comma separated list of tracks to process. 
 #
 # CALLING SYNTAX:
 #    $result = &CreateSysexFile($TrackData, $SysexBank, $TempoData, $MeterData,
@@ -1438,7 +1437,7 @@ if (defined( $cliOpts{c} ) ) {
 }
 
 # ==========
-# Verify syxtool is available if user specified an option that needs it.
+# Verify syxmidi is available if user specified an option that needs it.
 unless (-e $Syxmidi) {
    &ColorMessage("Required tool syxmidi not found: $Syxmidi", "BRIGHT_RED", '');
    exit(1);
