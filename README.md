@@ -145,14 +145,14 @@ Displays a hex dump of the specified file. No other processing is performed.
 
 ## Usage summary
 ```
-   WrkFile2Mid.pl  [-h] [-d [<lvl>]] [-a] [-f] [-e <file>] [-s <file>.sxd] 
+   WrkFile2Mid.pl  [-h] [-d <lvl>[m]] [-a] [-f] [-e <file>] [-s <file>.sxd] 
                    [-p <n>|auto] [-z <us>] [-M <map>] [-t <trk>[,<trk]] [-m]
                    [-c <file>] [-n] [-N] [-u] [-v] [-x <file>] [<path>/]<file>
 
    -h            Displays program usage text.
-   -d <lvl>      Run at specified debug level; 1-3. Higher number, more detail. 
+   -d <lvl>[m]   Run at specified debug level; 1-3. Higher number, more detail. 
                  Colored text is used for each level. Specify 'm' (e.g. 2m),
-                 for monochrome text. Useful for redirected console output.
+                 for monochrome text. Useful with redirected console output.
 
    -t <trk>      Process only the specified track(s).
    -a            Include sysex bank data in track 1 of MIDI file. 
