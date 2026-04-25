@@ -13,17 +13,19 @@
  *
  *   This program borrows heavily from sources related to the ALSA project.
  *   Refer to https://www.alsa-project.org for more information. The code
- *   was developed using Linux Mint 22.3 Zena. It was tested using a USB 
- *   MidiPlus MIDI interface and Emu Proteus 1 and 2. For reference, a -t
- *   value of 200 (200 micro-second delay per sysex byte) was sufficient 
- *   to prevent Emu Proteus device overload during program testing.
+ *   was developed using Linux Mint 22.3 Zena and Raspberry Pi4 linux 10
+ *   (buster). It was tested using a USB MidiPlus MIDI interface and Emu 
+ *   Proteus 1 and 2. For reference, a -t value of 200 (200 micro-second 
+ *   delay per sysex byte) was sufficient to prevent Emu Proteus device 
+ *   overload during program testing.
  * 
  *   The following command was used to build the program:
  *     gcc syxmidi.c -o syxmidi -lasound
  * 
- *   If asound dependency related messages are reported, use the linux 
- *   package manager, e.g. 'sudo apt install', to install one of amidi, 
- *   aconnect, or pmidi to resolve.
+ *   If asound dependency related messages are reported, install the library
+ *   using linux package manager; e.g. 'sudo apt install libasound2-dev'.
+ *   ALternately, installing one of amidi, aconnect, or pmidi will include
+ *   the library.
  * 
  *   Change history
  *   v0.1   03-30-2026    Initial code release.
