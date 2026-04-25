@@ -31,7 +31,8 @@ selecting from the available ALSA MIDI devices are also provided.
 
 This is a C language program with some source code leveraged from amidi.c and 
 pmidi.c. Refer to the syxmidi.c program header for the build command. The 
-archive zipped executable was built on Linux Mint 22.3 Zena.
+archive zipped executable was built on Linux Mint 22.3 Zena. The code was also
+successfully compiled and tested on Raspberry Pi4 linux 10 (buster).
 
 Use `syxmidi -h` to display the program usage text.
 
