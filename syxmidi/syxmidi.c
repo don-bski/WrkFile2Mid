@@ -30,6 +30,7 @@
  *   Change history
  *   v0.1   03-30-2026    Initial code release.
  *   v0.2   04-02-2026    Added -L option.
+ *   v0.3   04-27-2026    Suppress error message for no MIDI devices.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +40,7 @@
 #include <signal.h>
  
 static void usage(void) {
-    fprintf(stderr, "\n--- syxmidi v0.2 ---\n");
+    fprintf(stderr, "\n--- syxmidi v0.3 ---\n");
     fprintf(stderr, "Program to send/receive sysex data with ALSA connected MIDI devices. Older\n");
     fprintf(stderr, "equipment may require use of the -t option to slow down the -s or -S sysex\n");
     fprintf(stderr, "data transmission. For sysex reception (-r), the program waits up to 15 sec\n");
@@ -234,7 +235,7 @@ static void list_card_devices(int card) {
     device = -1;
     for (;;) {
         if ((err = snd_ctl_rawmidi_next_device(ctl, &device)) < 0) {
-            fprintf(stderr,"cannot determine device number: %s", snd_strerror(err));
+            // fprintf(stderr,"cannot determine device number: %s", snd_strerror(err));
             break;
         }
         if (device < 0)
