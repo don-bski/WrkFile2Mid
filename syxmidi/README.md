@@ -36,7 +36,7 @@ successfully compiled and tested on Raspberry Pi4 linux 10 (buster).
 
 Use `syxmidi -h` to display the program usage text.
 
-**syxmidi_v0.2.zip** - Linux mint compiled executable.</br>
-`md5: b6ccea14c0068d36d0a7ce87b30e0a50`<br/>
+**syxmidi_v0.3.zip** - Linux mint compiled executable.</br>
+`md5: d57043fc27bf18c726585232a29414cc`<br/>
 
 <img src="syxmidi.png" alt="screenshot" width="600"/><br/>
