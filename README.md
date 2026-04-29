@@ -200,3 +200,46 @@ Displays a hex dump of the specified file. No other processing is performed.
 ```
 
 <img src="wrkfile2mid_cap.png" alt="screenshot" width="1092"/><br/>
+<br/>
+
+# playWrk.pl
+This program is a wrapper for WrlFile2Midi.pl. It provides an interactive
+user interface for WRK file selection. The user selected file is processed
+by WrkFile2Mid.pl to create sysex (.sxd) and MIDI (.mid) file output. The
+.sxd sysex data is then sent to the currently available MIDI devices using
+syxmidi. Playback of the .mid file is then initiated using the pmidi program.
+Upon completion of playback, the user is prompted to select another WRK file.
+
+The -e option specifies the location of WrkFile2Mid.pl and syxmidi if not in
+the current working directory or playWrk.pl startup directory.
+
+The -w option specifies the location of the WRK files if not in the current
+working directory.
+
+WRK files specified on the startup CLI suppress user interactive prompting
+and may include a directory path. Linux piped input is also supported.
+
+## Usage summary
+```
+   playWrk.pl  [-h] [-e <dir>] [-w <dir>] [[<path>/]<file>, ...]
+
+   -h            Displays program usage text.
+   -e <dir>      Specifies support tool directory.
+   -w <dir>      Specifies WRK file directory.
+```
+
+## Examples
+```
+   playWrk.pl
+      Interactive processing of WRK files in the current working directory.
+
+   playWrk.pl -e /home/don/perl -w ./midi
+      Interactive processing of WRK files located in the ./midi directory.
+      Support tools are located in the /home/don/perl directory.
+
+   playWrk.pl -e /home/don/perl ./midi/piano.wrk ./midi/ditty.wrk
+      Non-interactive processing of the specified WRK files. Support tools
+      are located in the /home/don/perl directory.
+```
+
+<img src="playWrk_cap.png" alt="screenshot" width="740"/><br/>
