@@ -242,4 +242,4 @@ and may include a directory path. Linux piped input is also supported.
       are located in the /home/don/perl directory.
 ```
 
-<img src="playWrk_cap.png" alt="screenshot" width="740"/><br/>
+<img src="playWrk_cap.png" alt="screenshot" width="620"/><br/>
