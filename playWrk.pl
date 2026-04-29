@@ -290,8 +290,8 @@ sub InteractiveMode {
             &ColorMessage("Invalid Id: $id", "BRIGHT_YELLOW", '');
          }
       }
+      return 1 if (&InteractiveHeader($Dir, \%wrkFiles, $RawPorts, $SeqPorts));
    }
-   &ColorMessage("", "WHITE", '');
    return 0;
 }
 
@@ -341,7 +341,7 @@ sub ProcessWrkFile {
       return 1 if (($? >> 8) > 0);
    }
    &ColorMessage("Processing complete for: ", "BRIGHT_CYAN", 'nocr');   
-   &ColorMessage("$WrkFile\n", "WHITE", '');
+   &ColorMessage("$WrkFile", "WHITE", '');
    return 0;
 }
 
