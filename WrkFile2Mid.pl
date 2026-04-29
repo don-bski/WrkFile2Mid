@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # ==============================================================================
-# FILE: WrkFile2Mid.pl                                                4-24-2026
+# FILE: WrkFile2Mid.pl                                                4-29-2026
 #
 # SERVICES: Parse Cakewalk WRK file.  
 #
@@ -73,9 +73,10 @@
 #   specification.
 #
 #   Revision History:
-#   v0.1   Initial release.
-#   v0.2   MIDI file tempo correction.
-#   v0.3   Fixed track specified sysex and added -N option.
+#   v0.1  Initial release.
+#   v0.2  MIDI file tempo correction.
+#   v0.3  Fixed track specified sysex and added -N option.
+#   v0.4  Added logic for best effort when syxmidi is unavailable.
 # ==============================================================================
 use strict;
 use warnings;
@@ -100,7 +101,7 @@ else {
    $WorkingDir = getcwd;
 }
 our $Syxmidi = join('/', $WorkingDir, 'syxmidi'); # syxmidi tool.
-our $Version = 'v0.3';                            # Program version string.
+our $Version = 'v0.4';                            # Program version string.
 
 # The following hashs holds WRK file global data. Various chunck processors store
 # data here. The primary used entries are 'version' and 'timebase'.
@@ -1386,11 +1387,6 @@ sub ProcessWrkFile {
 # =============================================================================
 # MAIN PROGRAM
 # =============================================================================
-# Process user specified CLI options.
-my $allOpts = '';
-foreach my $op (keys(%cliOpts)) {
-   $allOpts = join('', $allOpts, $cliOpts{$op}) if (defined($cliOpts{$op}));
-}
 
 # ==========
 # Display program help if -h specified.
@@ -1437,47 +1433,49 @@ if (defined( $cliOpts{c} ) ) {
 }
 
 # ==========
-# Verify syxmidi is available if user specified an option that needs it.
-unless (-e $Syxmidi) {
-   &ColorMessage("Required tool syxmidi not found: $Syxmidi", "BRIGHT_RED", '');
-   exit(1);
-}
-
-# ==========
 # Build the %Devices hash. The syxmidi tool is used to detect the available ALSA
 # MIDI devices. The hash is populated with both RawMidi and Sequencer device Ids.
 # RawMidi devices must be used with sysex data transmission. Sequencer devices are
 # used with MIDI file playback.
 my %Devices = ();
-my @midiDevs = `$Syxmidi -l`;               # Get available ALSA RawMidi devices
-splice(@midiDevs, 0, 1);                    # Discard headline.
-if (scalar @midiDevs > 0) {
-   foreach my $midiDevRec (@midiDevs) {
-      chomp($midiDevRec);
-      my ($dir, $rawDev, $name) = $midiDevRec =~ m/^(\S+)\s+(\S+)\s+(.+)$/;
-      my $port = substr($rawDev, rindex($rawDev, ',')+1);
-      $Devices{'raw'}{$port}{'dir'} = $dir;
-      $Devices{'raw'}{$port}{'dev'} = $rawDev;
-      $Devices{'raw'}{$port}{'name'} = $name;
-      &DisplayDebug(1,"RawMidi device: dir: $dir  port: $port  " .
-                      "dev: $Devices{'raw'}{$port}{'dev'}  " .
-                      "name: $Devices{'raw'}{$port}{'name'}");
+unless (-e $Syxmidi) {
+   if (defined($cliOpts{m}) or defined($cliOpts{M}) or defined($cliOpts{s})) {
+      &ColorMessage("$Syxmidi not found.", "BRIGHT_RED", '');
+      &ColorMessage("syxmidi is required for -m, -M, and -s options.", "BRIGHT_RED", '');
+      exit(1);
    }
 }
-@midiDevs = `$Syxmidi -L`;               # Get available ALSA sequencer devices
-splice(@midiDevs, 0, 1);                 # Discard headline.
-if (scalar @midiDevs > 0) {
-   foreach my $midiDevRec (@midiDevs) {
-      chomp($midiDevRec);
-      $midiDevRec =~ s/^\s+//;
-      my ($dev, $name) = $midiDevRec =~ m/^(\S+)\s+(.+)$/;
-      next if ($name =~ m/Midi Through/);  # Skip MIDI Through device.
-      my $port = substr($dev, rindex($dev, ':')+1);
-      $Devices{'seq'}{$port}{'dev'} = $dev;
-      $Devices{'seq'}{$port}{'name'} = $name;
-      &DisplayDebug(1,"Seq device: port: $port  " .
-                      "dev: $Devices{'seq'}{$port}{'dev'}  " .
-                      "name: $Devices{'seq'}{$port}{'name'}");
+else {
+   my @midiDevs = `$Syxmidi -l`;            # Get available ALSA RawMidi devices
+   splice(@midiDevs, 0, 1);                 # Discard headline.
+   if (scalar @midiDevs > 0) {
+      foreach my $midiDevRec (@midiDevs) {
+         chomp($midiDevRec);
+         my ($dir, $rawDev, $name) = $midiDevRec =~ m/^(\S+)\s+(\S+)\s+(.+)$/;
+         my $port = substr($rawDev, rindex($rawDev, ',')+1);
+         $Devices{'raw'}{$port}{'dir'} = $dir;
+         $Devices{'raw'}{$port}{'dev'} = $rawDev;
+         $Devices{'raw'}{$port}{'name'} = $name;
+         &DisplayDebug(1,"RawMidi device: dir: $dir  port: $port  " .
+                         "dev: $Devices{'raw'}{$port}{'dev'}  " .
+                         "name: $Devices{'raw'}{$port}{'name'}");
+      }
+   }
+   @midiDevs = `$Syxmidi -L`;               # Get available ALSA sequencer devices
+   splice(@midiDevs, 0, 1);                 # Discard headline.
+   if (scalar @midiDevs > 0) {
+      foreach my $midiDevRec (@midiDevs) {
+         chomp($midiDevRec);
+         $midiDevRec =~ s/^\s+//;
+         my ($dev, $name) = $midiDevRec =~ m/^(\S+)\s+(.+)$/;
+         next if ($name =~ m/Midi Through/);  # Skip MIDI Through device.
+         my $port = substr($dev, rindex($dev, ':')+1);
+         $Devices{'seq'}{$port}{'dev'} = $dev;
+         $Devices{'seq'}{$port}{'name'} = $name;
+         &DisplayDebug(1,"Seq device: port: $port  " .
+                         "dev: $Devices{'seq'}{$port}{'dev'}  " .
+                         "name: $Devices{'seq'}{$port}{'name'}");
+      }
    }
 }
 
